@@ -1,0 +1,212 @@
+/**
+ * All of the CSS for your admin-specific functionality should be
+ * included in this file.
+ */
+
+#tables-filter .alignleft {
+    float: none;
+}
+.filter_blocks_wrapper {
+    display: flex;
+    width: 100%;
+}
+.filter_block {
+    display: flex;
+    align-items: baseline;
+    margin-bottom: 10px;
+}
+.tablenav .filter_block input {
+    line-height: 28px;
+    margin-right: 15px;
+}
+.tablenav .filter_block label {
+    margin-bottom: 0;
+    margin-right: 10px;
+}
+.tablenav .left_wrap .filter_block label {
+    width: 45px;
+}
+.tablenav .filter_block select {
+    float: none;
+    max-width: 230px;
+    width: 100%;
+}
+.tablenav .left_wrap .filter_block select {
+    max-width: 192px;
+}
+.tablenav .right_wrap .filter_block label {
+    width: 116px;
+}
+
+.filter_blocks_wrapper .left_wrap, .filter_blocks_wrapper .right_wrap {
+    max-width: 600px;
+    width: 100%;
+}
+
+.tablenav .left_wrap .filter_block label[for=order_date_to] {
+    width: auto;
+}
+
+#tables-filter .bootstrap-select:not([class*=col-]):not([class*=form-control]):not(.input-group-btn) {
+    max-width: 230px;
+    width: 100%;
+}
+
+#primer_receipt_table .filter_blocks_wrapper .right_wrap {
+    min-width: 350px;
+}
+
+.bootstrap-select .btn-light {
+    background-color: transparent;
+    border: 1px solid #8c8f94;
+    color: #2c3338;
+    font-size: 14px;
+}
+#tables-filter .bootstrap-select>.dropdown-toggle.bs-placeholder {
+    color: #2c3338;
+}
+#tables-filter .bootstrap-select .btn {
+    padding: 0 12px 0 8px;
+    line-height: 28px;
+}
+#tables-filter .bootstrap-select .btn:hover {
+    background-color: transparent;
+    border: 1px solid #8c8f94;
+    color: #2271b1;
+}
+#tables-filter .show>.btn-light.dropdown-toggle {
+    background-color: transparent;
+}
+#tables-filter .dropdown-menu {
+    font-size: 14px;
+}
+
+#tables-filter .tablenav.bottom {
+    display: none;
+}
+
+.submit.convert_orders {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.ui-datepicker-calendar thead {
+    display: none;
+}
+
+.submit.convert_orders.convert_receipts .button.download-btn.hide {
+    display: none;
+}
+
+.primer_options .cmb-form form {
+    margin: 0;
+    padding: 0 20px;
+}
+.primer_options .cmb-form .metabox-holder h3.title {
+    font-size: 18px;
+    font-weight: 600;
+    padding: 20px 0 0 20px;
+}
+
+.primer_options .cmb-form form .button-primary {
+    font-size: 16px;
+    height: 32px;
+    line-height: 16px;
+    margin: 20px 0;
+    padding: 0 15px 2px;
+}
+
+.primer_options .cmb-row.cmb-type-select.cmb2-id-invoice-type {
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 15px;
+}
+
+.primer_options .cmb-form .send_tested_email {
+    margin-top: 5px;
+    margin-bottom: 25px;
+}
+
+
+@keyframes ldio-drsjmtezgls {
+    0% { opacity: 1 }
+    100% { opacity: 0 }
+}
+.ldio-drsjmtezgls div {
+    left: 94px;
+    top: 48px;
+    position: absolute;
+    animation: ldio-drsjmtezgls linear 1s infinite;
+    background: #675d5d;
+    width: 12px;
+    height: 24px;
+    border-radius: 6px / 12px;
+    transform-origin: 6px 52px;
+}.ldio-drsjmtezgls div:nth-child(1) {
+     transform: rotate(0deg);
+     animation-delay: -0.9166666666666666s;
+     background: #675d5d;
+ }.ldio-drsjmtezgls div:nth-child(2) {
+      transform: rotate(30deg);
+      animation-delay: -0.8333333333333334s;
+      background: #675d5d;
+  }.ldio-drsjmtezgls div:nth-child(3) {
+       transform: rotate(60deg);
+       animation-delay: -0.75s;
+       background: #675d5d;
+   }.ldio-drsjmtezgls div:nth-child(4) {
+        transform: rotate(90deg);
+        animation-delay: -0.6666666666666666s;
+        background: #675d5d;
+    }.ldio-drsjmtezgls div:nth-child(5) {
+         transform: rotate(120deg);
+         animation-delay: -0.5833333333333334s;
+         background: #675d5d;
+     }.ldio-drsjmtezgls div:nth-child(6) {
+          transform: rotate(150deg);
+          animation-delay: -0.5s;
+          background: #675d5d;
+      }.ldio-drsjmtezgls div:nth-child(7) {
+           transform: rotate(180deg);
+           animation-delay: -0.4166666666666667s;
+           background: #675d5d;
+       }.ldio-drsjmtezgls div:nth-child(8) {
+            transform: rotate(210deg);
+            animation-delay: -0.3333333333333333s;
+            background: #675d5d;
+        }.ldio-drsjmtezgls div:nth-child(9) {
+             transform: rotate(240deg);
+             animation-delay: -0.25s;
+             background: #675d5d;
+         }.ldio-drsjmtezgls div:nth-child(10) {
+              transform: rotate(270deg);
+              animation-delay: -0.16666666666666666s;
+              background: #675d5d;
+          }.ldio-drsjmtezgls div:nth-child(11) {
+               transform: rotate(300deg);
+               animation-delay: -0.08333333333333333s;
+               background: #675d5d;
+           }.ldio-drsjmtezgls div:nth-child(12) {
+                transform: rotate(330deg);
+                animation-delay: 0s;
+                background: #675d5d;
+            }
+.loadingio-spinner-spinner-chyosfc7wi6 {
+    width: 200px;
+    height: 200px;
+    display: none;
+    overflow: hidden;
+    background: transparent;
+    position: absolute;
+    top: 250px;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+.ldio-drsjmtezgls {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform: translateZ(0) scale(1);
+    backface-visibility: hidden;
+    transform-origin: 0 0; /* see note above */
+}
+.ldio-drsjmtezgls div { box-sizing: content-box; }

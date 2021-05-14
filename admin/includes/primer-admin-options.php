@@ -793,6 +793,7 @@ function primer_admin_option( $key = '' ) {
 }
 
 function primer_smtp_settings() {
+	$primer_smtp = PrimerSMTP::get_instance();
 	$enc_req_met  = true;
 	$enc_req_err  = '';
 	//check if OpenSSL PHP extension is loaded and display warning if it's not
@@ -828,7 +829,61 @@ function primer_smtp_settings() {
 
 	if ( isset( $_POST['primer_smtp_form_submit'] ) ) {
 		/* Update settings */
-		$primer_smtp_options['send_from'] = isset( $_POST['send_from'] ) ? sanitize_text_field( wp_unslash( $_POST['send_from'] ) ) : '';
+
+		if( isset( $_POST['send_from'] ) ) {
+			if ( is_email( isset( $_POST['send_from'] ) ) ) {
+				$primer_smtp_options['send_from'] = sanitize_email( $_POST['send_from'] );
+			} else {
+				$error .= ' ' . __( "Please enter a valid email address in the 'Send email from account' field.", 'primer' );
+			}
+		}
+
+		$primer_smtp_options['reply_to_email'] = sanitize_email( 'test@example.com' );
+
+		$primer_smtp_options['smtp_server']            = stripslashes( $_POST['smtp_server'] );
+
+		/* Check value from "SMTP port" option */
+		if ( isset( $_POST['port'] ) ) {
+			if ( empty( $_POST['port'] ) || 1 > intval( $_POST['port'] ) || ( ! preg_match( '/^\d+$/', $_POST['port'] ) ) ) {
+				$primer_smtp_options['port'] = '25';
+				$error .= ' ' . __( "Please enter a valid port in the 'SMTP Port' field.", 'primer' );
+			} else {
+				$primer_smtp_options['port'] = sanitize_text_field( $_POST['port'] );
+			}
+		}
+
+		/* Update settings in the database */
+		if ( empty( $error ) ) {
+			update_option( 'primer_emails', $primer_smtp_options );
+			$message .= __( 'Settings saved.', 'primer' );
+		} else {
+			$error .= ' ' . __( 'Settings are not saved.', 'primer' );
+		}
+
+		/* Send test letter */
+		$primer_smtp_to = '';
+		if ( isset( $_POST['primer_smtp_form_submit'] ) ) {
+			if ( isset($_POST['send_from']) ) {
+				$to_email = sanitize_text_field( $_POST['send_from'] );
+				if (is_email( $to_email )) {
+					$primer_smtp_to = $to_email;
+				} else {
+					$error .= __( 'Please enter a valid email address in the recipient email field.', 'primer' );
+				}
+			}
+			$primer_smtp_subject = __('Test email subject', 'primer');
+			$primer_smtp_message = __('Test email message', 'primer');
+
+			//Save the test mail details so it doesn't need to be filled in everytime.
+			$smtp_test_mail['primer_smtp_to']      = $primer_smtp_to;
+			$smtp_test_mail['primer_smtp_subject'] = $primer_smtp_subject;
+			$smtp_test_mail['primer_smtp_message'] = $primer_smtp_message;
+			update_option( 'primer_smtp_test_mail', $smtp_test_mail );
+
+			if ( !empty( $primer_smtp_to ) ) {
+				$test_res = $primer_smtp->test_mail($primer_smtp_to, $primer_smtp_subject, $primer_smtp_message);
+			}
+		}
 
 	}
 }

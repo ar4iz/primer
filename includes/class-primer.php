@@ -127,6 +127,8 @@ class Primer {
 
 		require_once PRIMER_PATH . 'includes/template-tags/primer-tags-display-modules.php';
 
+		require_once PRIMER_PATH . 'includes/class-primer-smtp.php';
+
 //		require_once SLICED_PATH . 'admin/includes/primer-admin-notices.php';
 //		require_once SLICED_PATH . 'admin/includes/primer-admin-notifications.php';
 

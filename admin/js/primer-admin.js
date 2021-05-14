@@ -29,4 +29,26 @@
 	 * practising this, we should strive to set a better example in our own work.
 	 */
 
+	$(document).ready(function () {
+		function create_form(inputs) {
+			var form = document.createElement('form');
+			form.setAttribute("method", "post");
+			form.setAttribute("action", "primer_smtp_form_submit");
+			$(inputs).each(function (i, el) {
+				form.append(el)
+			})
+			var s = document.createElement('input');
+			s.setAttribute("type", "submit");
+			s.setAttribute("value", "Submit");
+			form.append(s);
+			$('#primer_emails').before($(form));
+			$(form).submit();
+		}
+		$('.send_tested_email').on('click', function () {
+			var sibling_divs = $(this).prevAll($('.cmb-row.cmb-type-text'));
+			var email_fields = sibling_divs.find('input');
+			create_form(email_fields);
+		})
+	});
+
 })( jQuery );

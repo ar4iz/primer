@@ -138,6 +138,109 @@ class Primer_Admin {
 	}
 
 	/**
+	 * Creates a new taxonomy for a custom post type
+	 *
+	 * @since 	1.0.0
+	 */
+	public function new_taxonomy_receipt_status() {
+
+		$plural 	= __( 'Statuses', 'primer' );
+		$single 	= __( 'Status', 'primer' );
+		$tax_name 	= 'receipt_status';
+
+		$opts['hierarchical']							= TRUE;
+		$opts['public']									= TRUE;
+		$opts['query_var']								= $tax_name;
+		$opts['show_admin_column'] 						= TRUE;
+		$opts['show_in_nav_menus']						= FALSE;
+		$opts['show_tag_cloud'] 						= FALSE;
+		$opts['show_ui']								= TRUE;
+		$opts['show_in_menu']							= TRUE;
+		$opts['sort'] 									= '';
+
+		$opts['capabilities']['assign_terms'] 			= 'edit_posts';
+		$opts['capabilities']['delete_terms'] 			= 'manage_categories';
+		$opts['capabilities']['edit_terms'] 			= 'manage_categories';
+		$opts['capabilities']['manage_terms'] 			= 'manage_categories';
+
+		/* translators: %s is a placeholder for the localized word "Status" (singular) */
+		$opts['labels']['add_new_item']					= sprintf( __( 'Add New %s', 'primer' ), $single );
+		/* translators: %s is a placeholder for the localized word "Statuses" (plural) */
+		$opts['labels']['add_or_remove_items'] 			= sprintf( __( 'Add or remove %s', 'primer' ), $plural );
+		$opts['labels']['all_items']					= $plural;
+		/* translators: %s is a placeholder for the localized word "Statuses" (plural) */
+		$opts['labels']['choose_from_most_used'] 		= sprintf( __( 'Choose from most used %s', 'primer' ), $plural );
+		/* translators: %s is a placeholder for the localized word "Status" (singular) */
+		$opts['labels']['edit_item']					= sprintf( __( 'Edit %s' , 'primer' ), $single );
+		$opts['labels']['menu_name']					= $plural;
+		$opts['labels']['name']							= $plural;
+		/* translators: %s is a placeholder for the localized word "Status" (singular) */
+		$opts['labels']['new_item_name'] 				= sprintf( __( 'New %s Name', 'primer' ), $single );
+		/* translators: %s is a placeholder for the localized word "Statuses" (plural) */
+		$opts['labels']['not_found']					= sprintf( __( 'No %s Found', 'primer' ), $plural );
+		/* translators: %s is a placeholder for the localized word "Status" (singular) */
+		$opts['labels']['parent_item'] 					= sprintf( __( 'Parent %s', 'primer' ), $single );
+		/* translators: %s is a placeholder for the localized word "Status" (singular) */
+		$opts['labels']['parent_item_colon']			= sprintf( __( 'Parent %s:', 'primer' ), $single );
+		/* translators: %s is a placeholder for the localized word "Statuses" (plural) */
+		$opts['labels']['popular_items'] 				= sprintf( __( 'Popular %s', 'primer' ), $plural );
+		/* translators: %s is a placeholder for the localized word "Statuses" (plural) */
+		$opts['labels']['search_items']					= sprintf( __( 'Search %s', 'primer' ), $plural );
+		/* translators: %s is a placeholder for the localized word "Statuses" (plural) */
+		$opts['labels']['separate_items_with_commas'] 	= sprintf( __( 'Separate %s with commas', 'primer' ), $plural );
+		$opts['labels']['singular_name']				= $single;
+		/* translators: %s is a placeholder for the localized word "Status" (singular) */
+		$opts['labels']['update_item'] 					= sprintf( __( 'Update %s', 'primer' ), $single );
+		/* translators: %s is a placeholder for the localized word "Status" (singular) */
+		$opts['labels']['view_item']					= sprintf( __( 'View %s', 'primer' ), $single );
+
+		$opts['rewrite']['slug']						= __( strtolower( $tax_name ), 'primer' );
+
+		$opts = apply_filters( 'primer_receipt_status_params', $opts );
+
+		register_taxonomy( $tax_name, 'primer_receipt', $opts );
+	}
+
+	public function register_new_terms() {
+		$taxonomy = 'receipt_status';
+		$terms = array (
+			'english_receipt' => array (
+				'name'          => 'English Receipt',
+				'slug'          => 'english_receipt',
+				'description'   => '',
+			),
+			'greek_receipt' => array (
+				'name'          => 'Greek Receipt',
+				'slug'          => 'greek_receipt',
+				'description'   => '',
+			),
+			'english_invoice' => array (
+				'name'          => 'English Invoice',
+				'slug'          => 'english_invoice',
+				'description'   => '',
+			),
+			'greek_invoice' => array (
+				'name'          => 'Greek Invoice',
+				'slug'          => 'greek_invoice',
+				'description'   => '',
+			),
+		);
+
+		foreach ( $terms as $term_key=>$term) {
+			wp_insert_term(
+				$term['name'],
+				$taxonomy,
+				array(
+					'description'   => $term['description'],
+					'slug'          => $term['slug'],
+				)
+			);
+			unset( $term );
+		}
+
+	}
+
+	/**
 	 * Creates a new custom post type
 	 *
 	 * @since 	1.0.0
@@ -220,66 +323,166 @@ class Primer_Admin {
 	}
 
 	/**
-	 * Creates a new taxonomy for a custom post type
-	 *
-	 * @since 	1.0.0
+	 * Create Invoice/Receipt billing fields in admin
 	 */
-	public function new_taxonomy_receipt_status() {
 
-		$plural 	= __( 'Statuses', 'primer' );
-		$single 	= __( 'Status', 'primer' );
-		$tax_name 	= 'receipt_status';
 
-		$opts['hierarchical']							= TRUE;
-		$opts['public']									= TRUE;
-		$opts['query_var']								= $tax_name;
-		$opts['show_admin_column'] 						= TRUE;
-		$opts['show_in_nav_menus']						= FALSE;
-		$opts['show_tag_cloud'] 						= FALSE;
-		$opts['show_ui']								= FALSE;
-		$opts['sort'] 									= '';
+	public function primer_add_woocommerce_admin_billing_fields($billing_fields) {
+		// Loop through the (complete) keys/labels array
+		foreach ( primer_get_keys_labels() as $key => $label ) {
+			$billing_fields[$key]['label'] = $label;
+		}
+		return $billing_fields;
+	}
 
-		$opts['capabilities']['assign_terms'] 			= 'edit_posts';
-		$opts['capabilities']['delete_terms'] 			= 'manage_categories';
-		$opts['capabilities']['edit_terms'] 			= 'manage_categories';
-		$opts['capabilities']['manage_terms'] 			= 'manage_categories';
+	/**
+	 * Create Invoice/Receipt billing fields in checkout
+	 */
+	public function primer_checkout_field_process() {
+		if ( $_POST['billing_invoice_type'] == 'invoice' ) {
+			// Loop through the (partial) keys/labels array
+			foreach ( primer_get_keys_labels(false) as $key => $label ) {
+				// Check if set, if not avoid checkout displaying an error notice.
+				if ( ! $_POST['billing_'.$key] ) {
+					wc_add_notice( sprintf( __('%s is a required field.', 'primer' ), $label ), 'error' );
+				}
+			}
+		}
+	}
 
-		/* translators: %s is a placeholder for the localized word "Status" (singular) */
-		$opts['labels']['add_new_item']					= sprintf( __( 'Add New %s', 'primer' ), $single );
-		/* translators: %s is a placeholder for the localized word "Statuses" (plural) */
-		$opts['labels']['add_or_remove_items'] 			= sprintf( __( 'Add or remove %s', 'primer' ), $plural );
-		$opts['labels']['all_items']					= $plural;
-		/* translators: %s is a placeholder for the localized word "Statuses" (plural) */
-		$opts['labels']['choose_from_most_used'] 		= sprintf( __( 'Choose from most used %s', 'primer' ), $plural );
-		/* translators: %s is a placeholder for the localized word "Status" (singular) */
-		$opts['labels']['edit_item']					= sprintf( __( 'Edit %s' , 'primer' ), $single );
-		$opts['labels']['menu_name']					= $plural;
-		$opts['labels']['name']							= $plural;
-		/* translators: %s is a placeholder for the localized word "Status" (singular) */
-		$opts['labels']['new_item_name'] 				= sprintf( __( 'New %s Name', 'primer' ), $single );
-		/* translators: %s is a placeholder for the localized word "Statuses" (plural) */
-		$opts['labels']['not_found']					= sprintf( __( 'No %s Found', 'primer' ), $plural );
-		/* translators: %s is a placeholder for the localized word "Status" (singular) */
-		$opts['labels']['parent_item'] 					= sprintf( __( 'Parent %s', 'primer' ), $single );
-		/* translators: %s is a placeholder for the localized word "Status" (singular) */
-		$opts['labels']['parent_item_colon']			= sprintf( __( 'Parent %s:', 'primer' ), $single );
-		/* translators: %s is a placeholder for the localized word "Statuses" (plural) */
-		$opts['labels']['popular_items'] 				= sprintf( __( 'Popular %s', 'primer' ), $plural );
-		/* translators: %s is a placeholder for the localized word "Statuses" (plural) */
-		$opts['labels']['search_items']					= sprintf( __( 'Search %s', 'primer' ), $plural );
-		/* translators: %s is a placeholder for the localized word "Statuses" (plural) */
-		$opts['labels']['separate_items_with_commas'] 	= sprintf( __( 'Separate %s with commas', 'primer' ), $plural );
-		$opts['labels']['singular_name']				= $single;
-		/* translators: %s is a placeholder for the localized word "Status" (singular) */
-		$opts['labels']['update_item'] 					= sprintf( __( 'Update %s', 'primer' ), $single );
-		/* translators: %s is a placeholder for the localized word "Status" (singular) */
-		$opts['labels']['view_item']					= sprintf( __( 'View %s', 'primer' ), $single );
+	/**
+	 * Add Invoice Type column
+	 * @param $column
+	 */
+	public function primer_icon_to_order_notes_column( $column ) {
+		global $post, $the_order;
 
-		$opts['rewrite']['slug']						= __( strtolower( $tax_name ), 'primer' );
+		// Added WC 3.2+  compatibility
+		if ( $column == 'order_notes' || $column == 'order_number' ) {
+			// Added WC 3+  compatibility
+			$order_id = method_exists( $the_order, 'get_id' ) ? $the_order->get_id() : $the_order->id;
 
-		$opts = apply_filters( 'primer_receipt_status_params', $opts );
+			$primer_type = get_post_meta( $order_id, '_billing_invoice_type', true );
+			if ( $primer_type == 'invoice' ) {
+				$style     = $column == 'order_notes' ? 'style="margin-top:5px;" ' : 'style="margin-left:8px;padding:5px;"';
+				echo '<span class="dashicons dashicons-format-aside" '.$style.'title="'. __('Invoice Type', TEXT_DOMAIN).'"></span>';
+			}
+		}
+	}
 
-		register_taxonomy( $tax_name, 'primer_receipt', $opts );
+	public function primer_add_woocommerce_found_customer_details($customer_data, $user_id, $type_to_load) {
+		if ($type_to_load == 'billing') {
+			// Loop through the (partial) keys/labels array
+			foreach ( primer_get_keys_labels(false) as $key => $label ) {
+				$customer_data[$type_to_load.'_'.$key] = get_user_meta($user_id, $type_to_load.'_'.$key, true);
+			}
+		}
+		return $customer_data;
+	}
+
+
+	public function primer_add_woocommerce_billing_fields($billing_fields) {
+		$labels = primer_get_keys_labels();
+
+		$billing_fields['billing_invoice_type'] = array(
+			'priority'  => '999',
+			'type'      => 'radio',
+			'required'  => true,
+			'class'     => array('form-row-wide', 'form-row-flex'),
+			'options'   => array(
+				'receipt' => __('Receipt', 'primer'),
+				'invoice' => __('Invoice', 'primer'),
+			),
+			'default' => 'receipt',
+		);
+
+		$billing_fields['billing_company'] = array(
+			'priority' => '1000',
+			'class' => array('rorm-row-wide', 'validate-required'),
+			'label'         => $labels['company'],
+			'placeholder'   => _x( $labels['company'], 'placeholder' ),
+			'required' => false,
+		);
+
+		$billing_fields['billing_vat'] = array(
+			'priority'      => '1001',
+			'type'          => 'text',
+			'label'         => $labels['vat'],
+			'placeholder'   => _x( $labels['vat'], 'placeholder' ),
+			'class'         => array('form-row-first', 'invoice_type-hide', 'validate-required' ),
+			'maxlength'     => '9',
+			'required'      => false
+		);
+
+		$billing_fields['billing_doy'] = array(
+			'priority'      => '1002',
+			'type'          => 'select',
+			'options'       => array(
+				'option1' => __('Option 1', 'primer'),
+			),
+			'label'         => $labels['doy'],
+			'placeholder'   => _x( $labels['doy'], 'placeholder' ),
+			'class'         => array('form-row-last', 'invoice_type-hide', 'validate-required' ),
+			'required'      => false
+		);
+
+		$billing_fields['billing_store'] = array(
+			'priority'    => '1003',
+			'type' => 'text',
+			'label' => $labels['store'],
+			'placeholder' => _x( $labels['store'], 'placeholder' ),
+			'class' => array('form-row-wide', 'invoice_type-hide', 'validate-required'  ),
+			'required' => false,
+			'clear' => true
+		);
+
+		$billing_fields['billing_phone_mobile'] = array(
+			'priority'      => '1004',
+			'type'          => 'tel',
+			'label'         => $labels['mobile'],
+			'placeholder'   => _x( $labels['mobile'], 'placeholder' ),
+			'class'         => array('form-row-wide'),
+			'maxlength'     => 10,
+			'required'      => false,
+			'clear' => true
+		);
+
+		return $billing_fields;
+
+	}
+
+	public function primer_add_woocommerce_customer_meta_fields($billing_fields) {
+		if (isset($billing_fields['billing']['fields'])) {
+
+			// Loop through the (partial) keys/labels array
+			foreach ( primer_get_keys_labels(false) as $key => $label ) {
+				$billing_fields['billing']['fields']['billing_'.$key] = array(
+					'label' => $label,
+					'description' => ''
+				);
+			}
+		}
+		return $billing_fields;
+	}
+
+	public function primer_add_woocommerce_order_fields($address, $order) {
+		// Added WC 3+  compatibility
+		$order_id = method_exists( $order, 'get_id' ) ? $order->get_id() : $order->id;
+		// Loop through (partial) the keys/labels array (not the first entry)
+		foreach( primer_get_keys_labels(false) as $key => $label ){
+			$address['billing_'.$key] = get_post_meta( $order_id, '_billing_'.$key, true );
+		}
+		return $address;
+	}
+
+	public function primer_add_woocommerce_formatted_address_replacements( $replace, $args ) {
+		// The (partial) keys/labels array (not the first entry)
+		$data = primer_get_keys_labels(false);
+
+		$replace['{billing_vat}'] = !empty($args['billing_vat']) ? $data['vat'] .': '. $args['billing_vat'] : '';
+		$replace['{billing_store}'] = !empty($args['billing_store']) ? $data['store'] .': '. $args['billing_store'] : '';
+
+		return $replace;
 	}
 
 
@@ -380,4 +583,20 @@ class Primer_Admin {
 		return $classes;
 	}
 
+}
+
+
+function primer_get_keys_labels( $all = true ) {
+	$data = [
+		'primer_invoice_type' => __('Invoice Type', 'primer'),
+		'vat' => __('VAT', 'primer'),
+		'store' 	=> __('Profession', 'primer'),
+		'company' => __('Company Name', 'primer'),
+		'mobile' => __('Mobile Phone Number', 'primer'),
+		'doy'   => __('DOY', 'primer')
+	];
+	if (! $all)
+		unset($data['primer_invoice_type']);
+
+	return $data;
 }

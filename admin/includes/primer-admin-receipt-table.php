@@ -144,8 +144,10 @@ class PrimerReceipt extends WP_List_Table {
 
 			<?php
 			$receipts_dates = $primer_receipts->get_dates_from_receipts();
-			$min_receipt_date = min($receipts_dates);
-			$max_receipt_date = max($receipts_dates);
+			if (!empty($receipts_dates)) {
+				$min_receipt_date = min($receipts_dates);
+				$max_receipt_date = max($receipts_dates);
+			}
 			$formatted_min_receipt_date = date('m/d/Y', $min_receipt_date);
 			$formatted_max_receipt_date = date('m/d/Y', $max_receipt_date);
 			?>

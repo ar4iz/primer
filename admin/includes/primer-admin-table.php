@@ -484,11 +484,34 @@ function convert_select_orders() {
 				if (!empty($order->get_date_paid())) {
 					$order_paid_date = date( 'F j, Y', $order->get_date_paid()->getTimestamp());
 					$order_paid_hour = date( 'H:i:s', $order->get_date_paid()->getTimestamp());
+				} else {
+					$order_paid_date = date( 'F j, Y', $order->get_date_created()->getTimestamp());
+					$order_paid_hour = date( 'H:i:s', $order->get_date_created()->getTimestamp());
 				}
 
 				$order_total_price = $order->get_total();
 				$user_id   = $order->get_user_id();
 				$user      = $order->get_user();
+
+				$order_country = $order->get_billing_country();
+
+				$order_invoice_type = get_post_meta($id_of_order, '_billing_invoice_type', true);
+
+				$insert_taxonomy = 'receipt_status';
+				$invoice_term = '';
+
+				if ($order_invoice_type == 'receipt' && $order_country == 'GR') {
+					$invoice_term = 'greek_receipt';
+				}
+				if ($order_invoice_type == 'receipt' && $order_country !== 'GR') {
+					$invoice_term = 'english_receipt';
+				}
+				if ($order_invoice_type == 'invoice' && $order_country == 'GR') {
+					$invoice_term = 'greek_invoice';
+				}
+				if ($order_invoice_type == 'invoice' && $order_country !== 'GR') {
+					$invoice_term = 'english_invoice';
+				}
 
 				$user_data = $user ? $user->display_name : '';
 
@@ -506,6 +529,8 @@ function convert_select_orders() {
 					'ping_status' => 'closed',
 					'post_status' => 'publish',
 				));
+				wp_set_object_terms($post_id, $invoice_term, $insert_taxonomy, false);
+
 				if ($post_id) {
 					update_post_meta($post_id, 'receipt_status', 'issued');
 					update_post_meta($post_id, 'order_id_to_receipt', $id_of_order);

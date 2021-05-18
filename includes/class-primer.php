@@ -127,8 +127,6 @@ class Primer {
 
 		require_once PRIMER_PATH . 'includes/template-tags/primer-tags-display-modules.php';
 
-		require_once PRIMER_PATH . 'includes/class-primer-smtp.php';
-
 //		require_once SLICED_PATH . 'admin/includes/primer-admin-notices.php';
 //		require_once SLICED_PATH . 'admin/includes/primer-admin-notifications.php';
 
@@ -179,9 +177,21 @@ class Primer {
 
 		$this->loader->add_filter( 'plugin_action_links_' . trailingslashit( $this->get_plugin_name() ) . $this->get_plugin_name() . '.php', $plugin_admin, 'plugin_action_links' );
 
-		$this->loader->add_action( 'init', $plugin_admin, 'new_cpt_receipt', 1 );
 		$this->loader->add_action( 'init', $plugin_admin, 'new_taxonomy_receipt_status', 1 );
+		$this->loader->add_action( 'init', $plugin_admin, 'new_cpt_receipt', 1 );
+		$this->loader->add_action( 'init', $plugin_admin, 'register_new_terms', 1 );
+
 		$this->loader->add_action( 'init', $plugin_admin, 'settings_check' );
+
+		// Additional Checkout billing fields
+		$this->loader->add_filter('woocommerce_admin_billing_fields', $plugin_admin, 'primer_add_woocommerce_admin_billing_fields');
+		$this->loader->add_filter('woocommerce_found_customer_details', $plugin_admin, 'primer_add_woocommerce_found_customer_details', 10, 3);
+		$this->loader->add_filter('woocommerce_customer_meta_fields', $plugin_admin, 'primer_add_woocommerce_customer_meta_fields');
+		$this->loader->add_filter('woocommerce_order_formatted_billing_address', $plugin_admin, 'primer_add_woocommerce_order_fields', 10, 2);
+		$this->loader->add_filter('woocommerce_formatted_address_replacements', $plugin_admin, 'primer_add_woocommerce_formatted_address_replacements', 10, 2);
+		$this->loader->add_filter('woocommerce_billing_fields', $plugin_admin, 'primer_add_woocommerce_billing_fields');
+		$this->loader->add_action('woocommerce_checkout_process', $plugin_admin, 'primer_checkout_field_process');
+		$this->loader->add_action('manage_shop_order_posts_custom_column', $plugin_admin, 'primer_icon_to_order_notes_column', 15, 1);
 
 
 		$this->loader->add_filter( 'admin_notices', $plugin_admin, 'custom_admin_notices' );

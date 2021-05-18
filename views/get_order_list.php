@@ -35,6 +35,9 @@ class PrimerOrderList {
 				if (!empty($order->get_date_paid())) {
 					$order_paid_date = date( 'F j, Y', $order->get_date_paid()->getTimestamp());
 					$order_paid_hour = date( 'H:i:s', $order->get_date_paid()->getTimestamp());
+				} else {
+					$order_paid_date = date( 'F j, Y', $order->get_date_created()->getTimestamp());
+					$order_paid_hour = date( 'H:i:s', $order->get_date_created()->getTimestamp());
 				}
 
 				$order_total_price = $order->get_total();

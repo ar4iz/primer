@@ -540,21 +540,7 @@ do_action( 'primer_before_receipt_display' ); ?>
 										<p>TIME</p>
 									</td>
 								</tr>
-								<tr>
-									<td>
-										<span class="invoice_type">{INVOICE_TYPE}</span>
-									</td>
-
-									<td>
-										<span class="invoice_number">{INVOICE_NUMBER}</span>
-									</td>
-									<td>
-										<span class="invoice_date"> {INVOICE_DATE}</span>
-									</td>
-									<td>
-										<span class="invoice_time"> {INVOICE_TIME}</span>
-									</td>
-								</tr>
+								<?php primer_display_invoice_information(); ?>
 								</tbody>
 							</table>
 						</td>
@@ -567,112 +553,13 @@ do_action( 'primer_before_receipt_display' ); ?>
 				<tr>
 					<td class="information_td_left">
 						<div class="information left">
-							<table>
-								<tr>
-									<td class="skin bold">
-										<span> CODE</span>
-									</td>
-									<td class="info_value">
-										<span>: </span>
-										<span class="counterparty_code">{CP_CODE}</span>
-									</td>
-								</tr>
-								<tr>
-									<td class="skin bold">
-										<span> NAME</span>
-									</td>
-									<td class="info_value">
-										<span>: </span>
-										<span class="counterparty_name">{CP_NAME}</span>
-									</td>
-								</tr>
-								<tr>
-									<td class="skin bold">
-										<span>PROFESSION</span>
-									</td>
-									<td class="info_value">
-										<span>: </span>
-										<span class="counterparty_activity"></span>
-									</td>
-								</tr>
-								<tr>
-									<td class="skin bold">
-										<span>VAT</span>
-									</td>
-									<td class="info_value">
-										<span>: </span>
-										<span class="counterparty_vat">{CP_NAME}</span>
-									</td>
-								</tr>
-								<tr>
-									<td class="skin bold">
-										<span>DOY</span>
-									</td>
-									<td class="info_value">
-										<span>: </span>
-										<span class="counterparty_doy"></span>
-									</td>
-								</tr>
-								<tr class="blank_row">
-									<td>&nbsp;</td>
-								</tr>
-							</table>
+							<?php primer_display_left_customer_info(); ?>
 						</div>
 					</td>
 					<td> </td>
 					<td class="information_td_right">
 						<div class="information right">
-							<table>
-								<tr>
-									<td class="skin bold">
-										<span>PAYMENT TYPE</span>
-									</td>
-									<td class="info_value">
-										<span>: </span>
-										<span class="counterparty_paytype">{CP_PAYTYPE}</span>
-									</td>
-								</tr>
-								<tr>
-									<td class="skin bold">
-										<span> TRADING PURPOSE</span>
-									</td>
-									<td class="info_value">
-										<span>: </span>
-										<span class="counterparty_tradepurpose">{CP_TRADEPURPOSE}</span>
-									</td>
-								</tr>
-								<tr>
-									<td class="skin bold">
-										<span>CITY</span>
-									</td>
-									<td class="info_value">
-										<span>: </span>
-										<span class="counterparty_city"></span>
-									</td>
-								</tr>
-								<tr>
-									<td class="skin bold">
-										<span>ADDRESS</span>
-									</td>
-									<td class="info_value">
-										<span>: </span>
-										<span class="counterparty_address">{CP_ADDRESS}</span>
-									</td>
-								</tr>
-								<tr>
-									<td class="skin bold">
-										<span>SEND PLACE</span>
-									</td>
-									<td class="info_value">
-										<span>: </span>
-										<span class="send_place">{SEND_PLACE}</span>
-									</td>
-								</tr>
-								<tr class="blank_row">
-									<td>&nbsp;</td>
-								</tr>
-
-							</table>
+							<?php primer_display_right_customer_info(); ?>
 						</div>
 					</td>
 				</tr>
@@ -683,34 +570,31 @@ do_action( 'primer_before_receipt_display' ); ?>
 			<table class="product_table">
 				<tr class="heading">
 					<td class="code_head_td">
-						<p> PRODUCT CODE</p>
+						<p> PRODUCT ID</p>
 					</td>
 					<td class="description_head_td">
 						<p> DESCRIPTION</p>
 					</td>
 					<td class="quantity_head_td">
-						<p> QUANTITY</p>
+						<p> PIECES</p>
 					</td>
 					<td class="mu_head_td">
-						<p> MEASURE UNIT</p>
+						<p> UNIT</p>
 					</td>
 					<td class="up_head_td">
-						<p> UNIT PRICE</p>
+						<p> PRICE PER UNIT</p>
 					</td>
 					<td class="disc_head_td">
-						<p> DISCOUNT</p>
-					</td>
-					<td class="whtax_head_td">
-						<p> WITHHOLDING TAXES</p>
+						<p> SALE</p>
 					</td>
 					<td class="vat_head_td">
 						<p> VAT %</p>
 					</td>
 					<td class="pricenovat_head_td">
-						<p> NET VALUE</p>
+						<p> PRICE BEFORE TAXES</p>
 					</td>
 					<td class="price_head_td">
-						<p> TOTAL PRICE</p>
+						<p> TOTAL AMOUNT</p>
 					</td>
 				</tr>
 				<?php primer_display_issuer_product(); ?>

@@ -517,12 +517,14 @@ function convert_select_orders() {
 
 				$currency      = $order->get_currency();
 				$currency_symbol = get_woocommerce_currency_symbol( $currency );
+
 				$payment_method = $order->get_payment_method();
 				$payment_title = $order->get_payment_method_title();
 				$product_name = $item_data->get_name();
 				$order_status = $order->get_status();
 
-				$post_id = wp_insert_post(array(
+				if ($currency == 'EUR') {
+					$post_id = wp_insert_post(array(
 					'post_type' => 'primer_receipt',
 					'post_title' => 'Receipt for order #' . $id_of_order,
 					'comment_status' => 'closed',
@@ -540,6 +542,9 @@ function convert_select_orders() {
 					add_post_meta($post_id, 'receipt_product', $product_name);
 					add_post_meta($post_id, 'receipt_price', $order_total_price . ' ' .$currency_symbol);
 					$response_data = '<div class="notice notice-success"><p>Orders converted</p></div>';
+				}
+				} else {
+					$response_data = '<div class="notice notice-error"><p>'.__('Only euro is accepted.', 'primer').'</p></div>';
 				}
 			}
 		}

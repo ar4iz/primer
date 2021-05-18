@@ -68,6 +68,8 @@
 		function my_callback() {
 			jQuery('body').trigger('update_checkout');
 		}
+
+		$('#billing_doy').selectWoo();
 	})
 
 })( jQuery );

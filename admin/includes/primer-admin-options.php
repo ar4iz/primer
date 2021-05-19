@@ -169,6 +169,8 @@ class Primer_Options {
 		</div>
 	<?php }
 
+
+
 	/**
 	 * Defines the theme option metabox and field configuration
 	 * @since  0.1.0
@@ -270,76 +272,71 @@ class Primer_Options {
 				),
 
 				array(
-					'name'		=> __( 'Standard VAT rates*:', 'primer' ),
+					'name'		=> __( 'VAT %', 'primer' ),
+					'desc'		=> __('', 'primer'),
+					'default'	=> __( 'Woocommerce VAT category', 'primer' ),
+					'type'		=> 'text',
+					'id'		=> 'vat_percents',
+					'attributes' => array(
+						'name'	=> '',
+						'readonly' => 'readonly',
+						'class' => 'regular-text input_title'
+					)
+
+				),
+
+				array(
+					'name'		=> __( '24%', 'primer' ),
 					'desc'		=> __('', 'primer'),
 					'default'	=> '',
 					'type'		=> 'select',
 					'id'		=> 'standard_vat_rates',
 					'options'	=> $this->get_standard_rates(),
-					'attributes' => array(
-						'data-validation' => 'required',
-						'required' => 'required'
-					)
 				),
 
 				array(
-					'name'		=> __( 'Reduced VAT rates*:', 'primer' ),
+					'name'		=> __( '17%', 'primer' ),
 					'desc'		=> __('', 'primer'),
 					'default'	=> '',
 					'type'		=> 'select',
-					'id'		=> 'reduced_vat_rates',
-					'options'	=> $this->get_reduced_rates(),
-					'attributes' => array(
-						'required' => 'required'
-					)
+					'id'		=> 'seventeen_vat_rates',
+					'options'	=> $this->get_standard_rates(),
 				),
 
 				array(
-					'name'		=> __( 'Zero VAT rates*:', 'primer' ),
+					'name'		=> __( '13%', 'primer' ),
 					'desc'		=> __('', 'primer'),
 					'default'	=> '',
 					'type'		=> 'select',
-					'id'		=> 'zero_vat_rates',
-					'options'	=> $this->get_zero_rates(),
-					'attributes' => array(
-						'required' => 'required'
-					)
+					'id'		=> 'thirteen_vat_rates',
+					'options'	=> $this->get_standard_rates(),
 				),
 
 				array(
-					'name'		=> __( 'E.U. Client Retail VAT rates:', 'primer' ),
+					'name'		=> __( '9%', 'primer' ),
 					'desc'		=> __('', 'primer'),
 					'default'	=> '',
 					'type'		=> 'select',
-					'id'		=> 'client_retail_vat',
-					'options'	=> array('' => 'Select VAT'),
+					'id'		=> 'nine_vat_rates',
+					'options'	=> $this->get_standard_rates(),
 				),
 
 				array(
-					'name'		=> __( 'E.U. Client Wholesale VAT exemption rates:', 'primer' ),
+					'name'		=> __( '6%', 'primer' ),
 					'desc'		=> __('', 'primer'),
 					'default'	=> '',
 					'type'		=> 'select',
-					'id'		=> 'client_wholesale_vat',
-					'options'	=> array('' => 'Select VAT'),
+					'id'		=> 'six_vat_rates',
+					'options'	=> $this->get_standard_rates(),
 				),
 
 				array(
-					'name'		=> __( 'E.U. Client Wholesale no VAT exemption rates:', 'primer' ),
+					'name'		=> __( '4%', 'primer' ),
 					'desc'		=> __('', 'primer'),
 					'default'	=> '',
 					'type'		=> 'select',
-					'id'		=> 'client_wholesale_no_vat',
-					'options'	=> array('' => 'Select VAT'),
-				),
-
-				array(
-					'name'		=> __( 'Client outside E.U. VAT rates:', 'primer' ),
-					'desc'		=> __('', 'primer'),
-					'default'	=> '',
-					'type'		=> 'select',
-					'id'		=> 'client_outside_vat',
-					'options'	=> array('' => 'Select VAT'),
+					'id'		=> 'four_vat_rates',
+					'options'	=> $this->get_standard_rates(),
 				),
 			)
 		) );
@@ -432,9 +429,46 @@ class Primer_Options {
 			)
 		) );
 
+		$checkbox = array(
+			'name'	=> __( 'Activate Automation', 'primer' ),
+			'desc' => __( 'Activate Automation', 'primer' ),
+			'type'	=> 'checkbox',
+			'id'	=> 'activation_automation',
+		);
+
+		$this->option_metabox[] = apply_filters( 'primer_automation_option_fields', array(
+			'id'			=> $prefix . 'automation',
+			'title'			=> __( 'Automation Settings', 'primer' ),
+			'menu_title'	=> __( 'Automation Settings', 'primer' ),
+			'desc'			=> __( '', 'primer' ),
+			'show_on'    	=> array( 'key' => 'options-page', 'value' => array( 'automation' ), ),
+			'show_names' 	=> true,
+			'fields'		=> array(
+				array(
+					'id'          => $prefix . 'demo',
+					'type'        => 'group',
+					'description' => '',
+					'options'     => array(
+						'group_title'   => __( 'Condition {#}', 'primer' ), // {#} gets replaced by row number
+						'add_button'    => __( '+Add condition', 'primer' ),
+						'remove_button' => __( 'Delete condition', 'primer' ),
+						'sortable'      => false,
+					),
+					'fields' => array(
+						array(
+							'name'       => __( 'Entry Title', 'cmb2' ),
+							'id'         => 'title',
+							'type'       => 'text',
+						)
+					)
+				)
+			)
+		) );
+
 		return $this->option_metabox;
 
 	}
+
 
 	/**
 	 * Get the list of Woocommerce Standard rates to add to dropdowns in the settings.
@@ -912,3 +946,66 @@ function primer_admin_option( $key = '' ) {
 }
 
 
+function primer_register_repeatable_group_field_metabox() {
+
+	// Start with an underscore to hide fields from custom fields list
+	$prefix = 'primer_';
+
+	/**
+	 * Repeatable Field Groups
+	 */
+	$cmb_group = new_cmb2_box( array(
+		'id'           => $prefix . 'metabox',
+		'title'        => __( 'Repeating Field Group', 'cmb2' ),
+		'show_on'    	=> array( 'key' => 'options-page', 'value' => array( 'automation' ), ),
+	) );
+
+	// $group_field_id is the field id string, so in this case: $prefix . 'demo'
+	$group_field_id = $cmb_group->add_field( array(
+		'id'          => $prefix . 'demo',
+		'type'        => 'group',
+		'description' => __( 'Generates reusable form entries', 'cmb2' ),
+		'options'     => array(
+			'group_title'   => __( 'Entry {#}', 'cmb2' ), // {#} gets replaced by row number
+			'add_button'    => __( 'Add Another Entry', 'cmb2' ),
+			'remove_button' => __( 'Remove Entry', 'cmb2' ),
+			'sortable'      => true, // beta
+		),
+	) );
+
+	/**
+	 * Group fields works the same, except ids only need
+	 * to be unique to the group. Prefix is not needed.
+	 *
+	 * The parent field's id needs to be passed as the first argument.
+	 */
+	$cmb_group->add_group_field( $group_field_id, array(
+		'name'       => __( 'Entry Title', 'cmb2' ),
+		'id'         => 'title',
+		'type'       => 'text',
+		// 'repeatable' => true, // Repeatable fields are supported w/in repeatable groups (for most types)
+	) );
+
+	$cmb_group->add_group_field( $group_field_id, array(
+		'name'        => __( 'Description', 'cmb2' ),
+		'description' => __( 'Write a short description for this entry', 'cmb2' ),
+		'id'          => 'description',
+		'type'        => 'textarea_small',
+	) );
+
+	$cmb_group->add_group_field( $group_field_id, array(
+		'name' => __( 'Entry Image', 'cmb2' ),
+		'id'   => 'image',
+		'type' => 'file',
+	) );
+
+	$cmb_group->add_group_field( $group_field_id, array(
+		'name' => __( 'Image Caption', 'cmb2' ),
+		'id'   => 'image_caption',
+		'type' => 'text',
+	) );
+
+	echo '<pre>'; print_r($cmb_group); exit();
+	return $cmb_group;
+
+}

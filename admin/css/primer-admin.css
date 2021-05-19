@@ -126,6 +126,16 @@
     margin-bottom: 25px;
 }
 
+.cmb2-wrap .regular-text.input_title {
+    border: none;
+    background-color: transparent;
+    font-weight: 600;
+    font-size: 14px;
+}
+.cmb2-wrap .regular-text.input_title:focus {
+    box-shadow: none;
+}
+
 
 @keyframes ldio-drsjmtezgls {
     0% { opacity: 1 }

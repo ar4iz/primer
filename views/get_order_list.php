@@ -57,6 +57,12 @@ class PrimerOrderList {
 					$receipt_status_from_meta_text = 'Issued';
 				}
 
+				$receipt_date = '';
+				$exist_receipt_id = get_order_from_receipt($id_of_order);
+				if (!empty($exist_receipt_id)) {
+					$receipt_date = get_the_date('F j, Y', $exist_receipt_id[0]);
+				}
+
 				$this->orders_array[$order_count]['order_id'] = $id_of_order;
 				$this->orders_array[$order_count]['order_date'] = $order_paid_date;
 				$this->orders_array[$order_count]['order_hour'] = $order_paid_hour;
@@ -65,8 +71,9 @@ class PrimerOrderList {
 				$this->orders_array[$order_count]['order_price'] = $order_total_price . ' ' .$currency_symbol;
 				$this->orders_array[$order_count]['order_status'] = $order_status;
 				$this->orders_array[$order_count]['payment_status'] = $payment_title;
-				$this->orders_array[$order_count]['receipt_date'] = $order_create_date;
+				$this->orders_array[$order_count]['receipt_date'] = $receipt_date;
 				$this->orders_array[$order_count]['receipt_status'] = $receipt_status_from_meta_text;
+				$this->orders_array[$order_count]['receipt_id'] = $exist_receipt_id ? $exist_receipt_id[0] : '';
 			}
 			$order_count++;
 		}
@@ -113,6 +120,12 @@ class PrimerOrderList {
 					$receipt_status_from_meta_text = 'Issued';
 				}
 
+				$receipt_date = '';
+				$exist_receipt_id = get_order_from_receipt($id_of_order);
+				if (!empty($exist_receipt_id)) {
+					$receipt_date = get_the_date('F j, Y', $exist_receipt_id[0]);
+				}
+
 				$this->orders_customers[$order_count]['order_id'] = $id_of_order;
 				$this->orders_customers[$order_count]['order_date'] = $order_paid_date;
 				$this->orders_customers[$order_count]['order_hour'] = $order_paid_hour;
@@ -122,8 +135,9 @@ class PrimerOrderList {
 				$this->orders_customers[$order_count]['order_price'] = $order_total_price . ' ' .$currency_symbol;
 				$this->orders_customers[$order_count]['order_status'] = $order_status;
 				$this->orders_customers[$order_count]['payment_status'] = $payment_title;
-				$this->orders_customers[$order_count]['receipt_date'] = $order_create_date;
+				$this->orders_customers[$order_count]['receipt_date'] = $receipt_date;
 				$this->orders_customers[$order_count]['receipt_status'] = $receipt_status_from_meta_text;
+				$this->orders_customers[$order_count]['receipt_id'] = $exist_receipt_id ? $exist_receipt_id[0] : '';
 			}
 			$order_count++;
 		}
@@ -249,6 +263,12 @@ class PrimerOrderList {
 					$receipt_status_from_meta_text = 'Issued';
 				}
 
+				$receipt_date = '';
+				$exist_receipt_id = get_order_from_receipt($id_of_order);
+				if (!empty($exist_receipt_id)) {
+					$receipt_date = get_the_date('F j, Y', $exist_receipt_id[0]);
+				}
+
 				$this->orders_array[$order_count]['order_id'] = $id_of_order;
 				$this->orders_array[$order_count]['order_date'] = $order_paid_date;
 				$this->orders_array[$order_count]['order_hour'] = $order_paid_hour;
@@ -257,8 +277,9 @@ class PrimerOrderList {
 				$this->orders_array[$order_count]['order_price'] = $order_total_price . ' ' .$currency_symbol;
 				$this->orders_array[$order_count]['order_status'] = $order_status;
 				$this->orders_array[$order_count]['payment_status'] = $payment_title;
-				$this->orders_array[$order_count]['receipt_date'] = $order_create_date;
+				$this->orders_array[$order_count]['receipt_date'] = $receipt_date;
 				$this->orders_array[$order_count]['receipt_status'] = $receipt_status_from_meta_text;
+				$this->orders_array[$order_count]['receipt_id'] = $exist_receipt_id ? $exist_receipt_id[0] : '';
 			}
 			$order_count++;
 		}
@@ -286,3 +307,30 @@ function handle_custom_query_var( $query, $query_vars ) {
 	return $query;
 }
 add_filter( 'woocommerce_order_data_store_cpt_get_orders_query', 'handle_custom_query_var', 10, 2 );
+
+
+function get_order_from_receipt($order_id) {
+	$invoice_id = array();
+	$post_args = array(
+		'posts_per_page' => -1,
+		'post_type' => 'primer_receipt',
+	);
+
+	$receipt_query = new WP_Query( $post_args );
+
+	if ($receipt_query->have_posts()):
+		while ($receipt_query->have_posts()):
+			$receipt_query->the_post();
+			$receipt_status_text = '';
+			$receipt_id = get_post_meta(get_the_ID(), 'order_id_to_receipt', true);
+			if (!empty($receipt_id)) {
+				if ($receipt_id == $order_id) {
+					$invoice_id[] = get_the_ID();
+				}
+			}
+		endwhile;
+	endif;
+	wp_reset_postdata();
+
+	return $invoice_id;
+}

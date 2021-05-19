@@ -36,6 +36,7 @@ class PrimerReceipts extends WP_List_Table {
 			'payment_status' => __( 'Payment Status', 'primer' ),
 			'receipt_date'	=> __( 'Receipt date', 'primer' ),
 			'receipt_status'	=> __( 'Receipt status', 'primer' ),
+			'receipt_id'	=> __( 'Receipt ID', 'primer' ),
 		);
 	}
 
@@ -45,10 +46,19 @@ class PrimerReceipts extends WP_List_Table {
 
 	function column_default( $item, $column_name ) {
 
-		if ($column_name !== 'receipt_date') {
+		if ($column_name !== 'receipt_date' && $column_name !== 'receipt_status' && $column_name !== 'receipt_id') {
 			echo '<a href="' . esc_url( admin_url( 'post.php?post=' . absint( $item['order_id'] ) ) . '&action=edit' ) . '" target="_blank" class="order-view"><strong>' . esc_attr( $item[ $column_name ] ) . '</strong></a>';
 		} else {
-			return $item[ $column_name ];
+			if ($column_name == 'receipt_date') {
+				$receipt_id = $item['receipt_id'];
+				if (!empty($receipt_id)) {
+					echo '<a href="' . esc_url( get_permalink($receipt_id) ) . '" target="_blank" class="order-view"><strong>' . esc_attr( $item[ $column_name ] ) . '</strong></a>';
+				} else {
+					return $item[ $column_name ];
+				}
+			} else {
+				return $item[ $column_name ];
+			}
 		}
 	}
 
@@ -60,7 +70,7 @@ class PrimerReceipts extends WP_List_Table {
 	 */
 
 	private $hidden_columns = array(
-		'receipt_status'
+		'receipt_status', 'receipt_id'
 	);
 
 	function column_cb( $item ) {
@@ -517,7 +527,6 @@ function convert_select_orders() {
 
 				$currency      = $order->get_currency();
 				$currency_symbol = get_woocommerce_currency_symbol( $currency );
-
 				$payment_method = $order->get_payment_method();
 				$payment_title = $order->get_payment_method_title();
 				$product_name = $item_data->get_name();
@@ -796,7 +805,7 @@ function fetch_primer_script() {
                 var order_arr = new Array();
                 $(orders).each(function (i, el) {
                     var tr_parent = $(el).parents('tr');
-                    var sibling_td = tr_parent.find('td.receipt_status a');
+                    var sibling_td = tr_parent.find('td.receipt_status');
                     if (sibling_td) {
                         var td_status = sibling_td.text();
                     }

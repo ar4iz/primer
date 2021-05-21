@@ -49,6 +49,7 @@ function primer_display_issuer_product() {
 	$discount = $order->get_discount_total();
 	$total_tax = $order->get_total_tax();
 
+
 	foreach ( $order->get_items() as $item_id => $item ) {
 		$issuer_product .= '<tr class="products">';
 		$product_id = $item->get_product_id();
@@ -85,15 +86,27 @@ function primer_display_issuer_product() {
 		$issuer_product .= '<td><span class="item_discount">'.$sale_price.'</span></td>';
 
 		$price_excl_tax = wc_get_price_excluding_tax( $product_instance ); // price without VAT
-		$price_incl_tax = $price_excl_tax + $total_tax;  // price with VAT
+		$price_incl_tax = wc_get_price_including_tax( $product_instance );  // price with VAT
 
-		$percent = ($total_tax / $price_excl_tax) * 100;
+		$subtotal_order_payment = $item->get_subtotal();
+
+		$subtotal_item_tax = $item->get_subtotal_tax();
+
+		if ($price_excl_tax == $price_incl_tax) {
+			$percent = (($subtotal_item_tax / $quantity) / $price_excl_tax ) * 100;
+		}
+
+//		$percent = (($total_tax / $quantity) / $price_excl_tax) * 100;
+
+		$total_order_payment = $item->get_total();
+
+		$total_order_item = $total_order_payment + $subtotal_item_tax;
 
 		$issuer_product .= '<td><span class="item_vat">'.$percent.'</span></td>';
 
-		$issuer_product .= '<td><span class="item_price_novat">'.$price_excl_tax.'</span></td>';
+		$issuer_product .= '<td><span class="item_price_novat">'.$subtotal_order_payment.'</span></td>';
 
-		$issuer_product .= '<td><span class="item_price_novat">'.$price_incl_tax.'</span></td>';
+		$issuer_product .= '<td><span class="item_price_novat">'.$total_order_item.'</span></td>';
 
 		$issuer_product .= '</tr>';
 	}
@@ -145,6 +158,9 @@ function primer_display_issuer_order_total_price() {
 	$tax_totals = $order->get_tax_totals();
 	$taxes = $order->get_taxes();
 	$total = $order->get_total();
+
+	$subtotal = $order->get_subtotal();
+
 	$total_discount = $order->get_total_discount();
 	$total_tax = $order->get_total_tax();
 
@@ -178,7 +194,7 @@ function primer_display_issuer_order_total_price() {
 	$issuer_total .= '<tr>';
 	$issuer_total .= '<td class="text-left"><p>TOTAL WITHOUT VAT</p></td>';
 	$issuer_total .= '<td class="text-right">';
-	$issuer_total .= '<p><span class="total_withoutvat">'.$price_excl_tax.' '.$currency_symbol.'</span> </p>';
+	$issuer_total .= '<p><span class="total_withoutvat">'.$subtotal.' '.$currency_symbol.'</span> </p>';
 	$issuer_total .= '</td>';
 	$issuer_total .= '</tr>';
 

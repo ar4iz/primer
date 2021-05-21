@@ -185,6 +185,11 @@ class Primer {
 
 		// Additional Checkout billing fields
 		$this->loader->add_filter('woocommerce_admin_billing_fields', $plugin_admin, 'primer_add_woocommerce_admin_billing_fields');
+
+		$this->loader->add_action('woocommerce_admin_order_data_after_order_details', $plugin_admin, 'primer_editable_order_meta_general');
+		$this->loader->add_action('woocommerce_process_shop_order_meta', $plugin_admin, 'primer_save_general_details');
+
+
 		$this->loader->add_filter('woocommerce_found_customer_details', $plugin_admin, 'primer_add_woocommerce_found_customer_details', 10, 3);
 		$this->loader->add_filter('woocommerce_customer_meta_fields', $plugin_admin, 'primer_add_woocommerce_customer_meta_fields');
 		$this->loader->add_filter('woocommerce_order_formatted_billing_address', $plugin_admin, 'primer_add_woocommerce_order_fields', 10, 2);

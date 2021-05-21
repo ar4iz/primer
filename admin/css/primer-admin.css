@@ -136,6 +136,19 @@
     box-shadow: none;
 }
 
+#primer_conditions_repeat .inside.cmb-td.cmb-nested.cmb-field-list {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+}
+#primer_conditions_repeat .inside.cmb-td.cmb-nested.cmb-field-list .cmb-row .cmb-th, #primer_conditions_repeat .inside.cmb-td.cmb-nested.cmb-field-list .cmb-row .cmb-td {
+    width: auto;
+}
+#primer_conditions_repeat .inside.cmb-td.cmb-nested.cmb-field-list .cmb-row {
+    display: flex;
+    flex-wrap: wrap;
+}
+
 
 @keyframes ldio-drsjmtezgls {
     0% { opacity: 1 }

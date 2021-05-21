@@ -444,8 +444,9 @@ class Primer_Options {
 			'show_on'    	=> array( 'key' => 'options-page', 'value' => array( 'automation' ), ),
 			'show_names' 	=> true,
 			'fields'		=> array(
+				$checkbox,
 				array(
-					'id'          => $prefix . 'demo',
+					'id'          => $prefix . 'conditions',
 					'type'        => 'group',
 					'description' => '',
 					'options'     => array(
@@ -456,12 +457,99 @@ class Primer_Options {
 					),
 					'fields' => array(
 						array(
-							'name'       => __( 'Entry Title', 'cmb2' ),
-							'id'         => 'title',
-							'type'       => 'text',
+							'name'       => __( 'Issue receipt if order state is: ', 'primer' ),
+							'id'         => 'receipt_order_states',
+							'type'       => 'select',
+							'options'	=> array(
+								'' => __('Get order states from', 'primer')
+							)
+						),
+						array(
+							'name'       => __( 'And payment state is ', 'primer' ),
+							'id'         => 'receipt_payment_states',
+							'type'       => 'select',
+							'options'	=> array(
+								'' => __('Get payment states from', 'primer')
+							)
+						),
+						array(
+							'name' 	=> __('Send email to client', 'primer'),
+							'id'	=> 'client_email_send',
+							'type'	=> 'checkbox'
 						)
 					)
-				)
+				),
+
+				array(
+					'name' => __('Run Automation every ', 'primer'),
+					'id'	=> 'automation_duration',
+					'type' => 'select',
+					'options' => array(
+							'' => __('5 minutes', 'primer'),
+							'0' => __('10 minutes', 'primer'),
+					),
+					'after_field' => __('In order for automation to work, your server needs to support cron.', 'primer')
+				),
+
+				array(
+					'name' => __('Run Automation on orders issued after: ', 'primer'),
+					'id' => 'calendar_date_timestamp',
+					'type' => 'text_date',
+					'after_field' => __('Warning, the older the date, the heavier is the load for your server. If you get frequent timeouts, try using a more recent date.', 'primer')
+				),
+
+				array(
+					'name'	=> __( 'Send email to admin', 'primer' ),
+					'desc' => '',
+					'type'	=> 'checkbox',
+					'id'	=> 'send_email_to_admin',
+				),
+
+				array(
+					'name'	=> __( 'Admin email', 'primer' ),
+					'desc' => '',
+					'type'	=> 'text_email',
+					'id'	=> 'admin_email',
+				),
+
+				array(
+					'name'	=> __( 'Send successful receipts log', 'primer' ),
+					'desc' => '',
+					'type'	=> 'checkbox',
+					'id'	=> 'send_successful_log',
+				),
+
+				array(
+					'name'	=> __( 'Send failed receipts log', 'primer' ),
+					'desc' => '',
+					'type'	=> 'checkbox',
+					'id'	=> 'send_failed_log',
+				),
+
+				array(
+					'name'	=> __( 'Email Subject: ', 'primer' ),
+					'desc' => '',
+					'type'	=> 'text',
+					'id'	=> 'email_subject',
+				),
+
+				array(
+					'name'	=> '',
+					'desc' => '',
+					'type'	=> 'button',
+					'id'	=> 'log_button',
+					'after' => '<button type="button" class="button">Log</button>'
+				),
+
+				array(
+					'name'	=> '',
+					'desc' => '',
+					'type'	=> 'button',
+					'id'	=> 'run_now_button',
+					'after' => '<button type="button" class="button">Run Now</button>'
+				),
+
+
 			)
 		) );
 
@@ -943,69 +1031,4 @@ $Primer_Options = new Primer_Options();
 function primer_admin_option( $key = '' ) {
 	global $Primer_Options;
 	return cmb2_get_option( $Primer_Options->primer_get_option_key($key), $key );
-}
-
-
-function primer_register_repeatable_group_field_metabox() {
-
-	// Start with an underscore to hide fields from custom fields list
-	$prefix = 'primer_';
-
-	/**
-	 * Repeatable Field Groups
-	 */
-	$cmb_group = new_cmb2_box( array(
-		'id'           => $prefix . 'metabox',
-		'title'        => __( 'Repeating Field Group', 'cmb2' ),
-		'show_on'    	=> array( 'key' => 'options-page', 'value' => array( 'automation' ), ),
-	) );
-
-	// $group_field_id is the field id string, so in this case: $prefix . 'demo'
-	$group_field_id = $cmb_group->add_field( array(
-		'id'          => $prefix . 'demo',
-		'type'        => 'group',
-		'description' => __( 'Generates reusable form entries', 'cmb2' ),
-		'options'     => array(
-			'group_title'   => __( 'Entry {#}', 'cmb2' ), // {#} gets replaced by row number
-			'add_button'    => __( 'Add Another Entry', 'cmb2' ),
-			'remove_button' => __( 'Remove Entry', 'cmb2' ),
-			'sortable'      => true, // beta
-		),
-	) );
-
-	/**
-	 * Group fields works the same, except ids only need
-	 * to be unique to the group. Prefix is not needed.
-	 *
-	 * The parent field's id needs to be passed as the first argument.
-	 */
-	$cmb_group->add_group_field( $group_field_id, array(
-		'name'       => __( 'Entry Title', 'cmb2' ),
-		'id'         => 'title',
-		'type'       => 'text',
-		// 'repeatable' => true, // Repeatable fields are supported w/in repeatable groups (for most types)
-	) );
-
-	$cmb_group->add_group_field( $group_field_id, array(
-		'name'        => __( 'Description', 'cmb2' ),
-		'description' => __( 'Write a short description for this entry', 'cmb2' ),
-		'id'          => 'description',
-		'type'        => 'textarea_small',
-	) );
-
-	$cmb_group->add_group_field( $group_field_id, array(
-		'name' => __( 'Entry Image', 'cmb2' ),
-		'id'   => 'image',
-		'type' => 'file',
-	) );
-
-	$cmb_group->add_group_field( $group_field_id, array(
-		'name' => __( 'Image Caption', 'cmb2' ),
-		'id'   => 'image_caption',
-		'type' => 'text',
-	) );
-
-	echo '<pre>'; print_r($cmb_group); exit();
-	return $cmb_group;
-
 }

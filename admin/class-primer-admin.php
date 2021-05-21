@@ -365,7 +365,7 @@ class Primer_Admin {
 			$primer_type = get_post_meta( $order_id, '_billing_invoice_type', true );
 			if ( $primer_type == 'invoice' ) {
 				$style     = $column == 'order_notes' ? 'style="margin-top:5px;" ' : 'style="margin-left:8px;padding:5px;"';
-				echo '<span class="dashicons dashicons-format-aside" '.$style.'title="'. __('Invoice Type', TEXT_DOMAIN).'"></span>';
+				echo '<span class="dashicons dashicons-format-aside" '.$style.'title="'. __('Invoice Type', 'primer').'"></span>';
 			}
 		}
 	}
@@ -471,6 +471,36 @@ class Primer_Admin {
 			$address['billing_'.$key] = get_post_meta( $order_id, '_billing_'.$key, true );
 		}
 		return $address;
+	}
+
+	public function primer_editable_order_meta_general( $order ) { ?>
+		<br class="clear" />
+		<h4>Invoice Type <a href="#" class="edit_address">Edit</a></h4>
+		<?php
+			$get_invoice_type = get_post_meta( $order->get_id(), '_billing_invoice_type', true );
+		?>
+		<div class="address">
+			<p><strong>This is an invoice type order</strong><?php echo $get_invoice_type; ?></p>
+		</div>
+		<div class="edit_address">
+			<?php
+				woocommerce_wp_radio(array(
+					'id' => 'get_invoice_type',
+					'label' => 'Check invoice type',
+					'value' => $get_invoice_type,
+					'options' => array(
+						'receipt' => 'Receipt',
+						'invoice' => 'Invoice'
+					),
+					'style' => 'width:16px', // required for checkboxes and radio buttons
+					'wrapper_class' => 'form-field-wide' // always add this class
+				));
+			?>
+		</div>
+	<?php }
+
+	public function primer_save_general_details( $order_id ) {
+		update_post_meta($order_id, '_billing_invoice_type', wc_clean( $_POST['get_invoice_type'] ));
 	}
 
 	public function primer_add_woocommerce_formatted_address_replacements( $replace, $args ) {

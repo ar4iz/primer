@@ -486,53 +486,53 @@ function convert_select_orders() {
 	if (!empty($orders)) {
 		foreach ( $orders as $order_id ) {
 			$order = wc_get_order( $order_id );
-			foreach ( $order->get_items() as $item_id => $item_data ) {
-				$id_of_order = $item_data->get_order_id();
-				$order_create_date = date( 'F j, Y', $order->get_date_created()->getOffsetTimestamp());
-				$order_paid_date = null;
-				$order_paid_hour = null;
-				if (!empty($order->get_date_paid())) {
-					$order_paid_date = date( 'F j, Y', $order->get_date_paid()->getTimestamp());
-					$order_paid_hour = date( 'H:i:s', $order->get_date_paid()->getTimestamp());
-				} else {
-					$order_paid_date = date( 'F j, Y', $order->get_date_created()->getTimestamp());
-					$order_paid_hour = date( 'H:i:s', $order->get_date_created()->getTimestamp());
-				}
 
-				$order_total_price = $order->get_total();
-				$user_id   = $order->get_user_id();
-				$user      = $order->get_user();
+			$id_of_order = $order->get_id();
 
-				$order_country = $order->get_billing_country();
+			$order_country = $order->get_billing_country();
+			$order_create_date = date( 'F j, Y', $order->get_date_created()->getOffsetTimestamp());
+			$order_paid_date = null;
+			$order_paid_hour = null;
+			if (!empty($order->get_date_paid())) {
+				$order_paid_date = date( 'F j, Y', $order->get_date_paid()->getTimestamp());
+				$order_paid_hour = date( 'H:i:s', $order->get_date_paid()->getTimestamp());
+			} else {
+				$order_paid_date = date( 'F j, Y', $order->get_date_created()->getTimestamp());
+				$order_paid_hour = date( 'H:i:s', $order->get_date_created()->getTimestamp());
+			}
 
-				$order_invoice_type = get_post_meta($id_of_order, '_billing_invoice_type', true);
+			$order_total_price = $order->get_total();
+			$user_id   = $order->get_user_id();
+			$user      = $order->get_user();
 
-				$insert_taxonomy = 'receipt_status';
-				$invoice_term = '';
 
-				if ($order_invoice_type == 'receipt' && $order_country == 'GR') {
-					$invoice_term = 'greek_receipt';
-				}
-				if ($order_invoice_type == 'receipt' && $order_country !== 'GR') {
-					$invoice_term = 'english_receipt';
-				}
-				if ($order_invoice_type == 'invoice' && $order_country == 'GR') {
-					$invoice_term = 'greek_invoice';
-				}
-				if ($order_invoice_type == 'invoice' && $order_country !== 'GR') {
-					$invoice_term = 'english_invoice';
-				}
+			$order_invoice_type = get_post_meta($id_of_order, '_billing_invoice_type', true);
 
-				$user_data = $user ? $user->display_name : '';
+			$insert_taxonomy = 'receipt_status';
+			$invoice_term = '';
 
-				$currency      = $order->get_currency();
-				$currency_symbol = get_woocommerce_currency_symbol( $currency );
-				$payment_method = $order->get_payment_method();
-				$payment_title = $order->get_payment_method_title();
-				$product_name = $item_data->get_name();
-				$order_status = $order->get_status();
+			if ($order_invoice_type == 'receipt' && $order_country == 'GR') {
+				$invoice_term = 'greek_receipt';
+			}
+			if ($order_invoice_type == 'receipt' && $order_country !== 'GR') {
+				$invoice_term = 'english_receipt';
+			}
+			if ($order_invoice_type == 'invoice' && $order_country == 'GR') {
+				$invoice_term = 'greek_invoice';
+			}
+			if ($order_invoice_type == 'invoice' && $order_country !== 'GR') {
+				$invoice_term = 'english_invoice';
+			}
 
-				if ($currency == 'EUR') {
+			$user_data = $user ? $user->display_name : '';
+
+			$currency      = $order->get_currency();
+			$currency_symbol = get_woocommerce_currency_symbol( $currency );
+			$payment_method = $order->get_payment_method();
+			$payment_title = $order->get_payment_method_title();
+			$order_status = $order->get_status();
+
+			if ($currency == 'EUR') {
 					$post_id = wp_insert_post(array(
 					'post_type' => 'primer_receipt',
 					'post_title' => 'Receipt for order #' . $id_of_order,
@@ -542,20 +542,23 @@ function convert_select_orders() {
 				));
 				wp_set_object_terms($post_id, $invoice_term, $insert_taxonomy, false);
 
-				if ($post_id) {
-					update_post_meta($post_id, 'receipt_status', 'issued');
-					update_post_meta($post_id, 'order_id_to_receipt', $id_of_order);
-					update_post_meta($id_of_order, 'receipt_status', 'issued');
-					add_post_meta($post_id, 'receipt_client', $user_data);
-					add_post_meta($post_id, 'receipt_client_id', $user_id);
-					add_post_meta($post_id, 'receipt_product', $product_name);
-					add_post_meta($post_id, 'receipt_price', $order_total_price . ' ' .$currency_symbol);
-					$response_data = '<div class="notice notice-success"><p>Orders converted</p></div>';
-				}
+					if ($post_id) {
+						update_post_meta($post_id, 'receipt_status', 'issued');
+						update_post_meta($post_id, 'order_id_to_receipt', $id_of_order);
+						update_post_meta($id_of_order, 'receipt_status', 'issued');
+						add_post_meta($post_id, 'receipt_client', $user_data);
+						add_post_meta($post_id, 'receipt_client_id', $user_id);
+						add_post_meta($post_id, 'receipt_price', $order_total_price . ' ' .$currency_symbol);
+						foreach ( $order->get_items() as $item_id => $item_data ) {
+							$product_name = $item_data->get_name();
+							add_post_meta($post_id, 'receipt_product', $product_name);
+						}
+						$response_data = '<div class="notice notice-success"><p>Orders converted</p></div>';
+					}
 				} else {
 					$response_data = '<div class="notice notice-error"><p>'.__('Only euro is accepted.', 'primer').'</p></div>';
 				}
-			}
+
 		}
 	}
 

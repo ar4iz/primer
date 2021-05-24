@@ -48,6 +48,7 @@
 				$('#billing_company_field label > .optional').remove();
 				$('#billing_company_field').find('abbr').remove();
 				$('#billing_company_field'+' label').append(required);
+
 				$('#billing_doy_field label > .optional').remove();
 				$('#billing_doy_field').find('abbr').remove();
 				$('#billing_doy_field'+' label').append(required);

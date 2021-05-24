@@ -322,11 +322,36 @@ class Primer_Admin {
 		register_post_type('primer_receipt', $opts );
 	}
 
+	public function primer_create_tax_rates() {
+
+		$tax_option = get_option('woocommerce_calc_taxes');
+
+		if ($tax_option != 'yes') {
+			update_option('woocommerce_calc_taxes', 'yes');
+		}
+
+		$tax_rate = array('tax_rate_country' => 'GR', 'tax_rate_state' => '*', 'tax_rate' => '24.0000', 'tax_rate_name' => 'Standard', 'tax_rate_priority' => '1', 'tax_rate_compound' => '0', 'tax_rate_shipping' => '1', 'tax_rate_order' => '1', 'tax_rate_class' => '');
+
+		$tax_classes   = WC_Tax::get_tax_classes(); // Retrieve all tax classes.
+		if ( ! in_array( '', $tax_classes ) ) { // Make sure "Standard rate" (empty class name) is present.
+			array_unshift( $tax_classes, '' );
+		}
+
+		foreach ( $tax_classes as $tax_class ) { // For each tax class, get all rates.
+			$taxes         = WC_Tax::get_rates_for_tax_class( $tax_class );
+			if (empty($taxes)) {
+//				WC_Tax::_insert_tax_rate($tax_rate);
+			}
+		}
+	}
+
+	public function primer_set_shipping_country() {
+		return 'GR';
+	}
+
 	/**
 	 * Create Invoice/Receipt billing fields in admin
 	 */
-
-
 	public function primer_add_woocommerce_admin_billing_fields($billing_fields) {
 		// Loop through the (complete) keys/labels array
 		foreach ( primer_get_keys_labels() as $key => $label ) {
@@ -398,7 +423,7 @@ class Primer_Admin {
 
 		$billing_fields['billing_company'] = array(
 			'priority' => '1000',
-			'class' => array('rorm-row-wide', 'validate-required'),
+			'class' => array('form-row-wide', 'invoice_type-hide', 'validate-required'),
 			'label'         => $labels['company'],
 			'placeholder'   => _x( $labels['company'], 'placeholder' ),
 			'required' => false,
@@ -449,6 +474,26 @@ class Primer_Admin {
 
 	}
 
+	/*public function primer_add_woocommerce_shipping_fields($shipping_fields) {
+		$labels = primer_get_keys_labels();
+
+		$shipping_fields['shipping_company'] = array(
+			'priority' => '1000',
+			'class' => array('form-row-wide', 'invoice_type-hide', 'validate-required'),
+			'label'         => $labels['company'],
+			'placeholder'   => _x( $labels['company'], 'placeholder' ),
+			'required' => false,
+		);
+		return $shipping_fields;
+	}*/
+
+	public function primer_remove_woocommerce_shipping_fields($fields) {
+		unset( $fields['shipping']['shipping_first_name'] );
+		unset( $fields['shipping']['shipping_last_name'] );
+		unset( $fields['shipping']['shipping_company'] );
+		return $fields;
+	}
+
 	public function primer_add_woocommerce_customer_meta_fields($billing_fields) {
 		if (isset($billing_fields['billing']['fields'])) {
 
@@ -487,7 +532,7 @@ class Primer_Admin {
 				woocommerce_wp_radio(array(
 					'id' => 'get_invoice_type',
 					'label' => 'Check invoice type',
-					'value' => $get_invoice_type,
+					'value' => $get_invoice_type ? $get_invoice_type : 'receipt',
 					'options' => array(
 						'receipt' => 'Receipt',
 						'invoice' => 'Invoice'

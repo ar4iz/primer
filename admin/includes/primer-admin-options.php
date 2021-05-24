@@ -93,7 +93,7 @@ class Primer_Options {
 
 		add_submenu_page('wp_ajax_list_order', __('Export', 'primer'), __('Export', 'primer'), 'manage_options', 'primer_export', array(&$this, "admin_settings_page_display"));
 
-		add_submenu_page('wp_ajax_list_order', __('License and General Settings', 'primer'), __('License and General Settings', 'primer'), 'manage_options', 'primer_license', array(&$this, "admin_settings_page_display"));
+		$this->options_pages[] = add_submenu_page('wp_ajax_list_order', __('License and General Settings', 'primer'), __('License and General Settings', 'primer'), 'manage_options', 'primer_licenses', array(&$this, "admin_settings_page_display"));
 
 		$this->options_pages[] = add_submenu_page( null,  $this->menu_title, 'MyData Settings', 'manage_options', 'primer_mydata', array( $this, 'admin_settings_page_display' ));
 		$this->options_pages[] = add_submenu_page( null,  $this->menu_title, 'Automation Settings', 'manage_options', 'primer_automation', array( $this, 'admin_settings_page_display' ));
@@ -120,8 +120,8 @@ class Primer_Options {
 			return;
 		}
 
-		if ( isset( $_GET['page'] ) && $_GET['page'] === 'primer_license' ) {
-			$current_tab = 'license';
+		if ( isset( $_GET['page'] ) && $_GET['page'] === 'primer_licenses' ) {
+			$current_tab = 'licenses';
 		} else {
 			$current_tab = empty( $_GET['tab'] ) ? 'mydata' : sanitize_title( $_GET['tab'] );
 		}
@@ -144,7 +144,7 @@ class Primer_Options {
 						$nav_class .= ' nav-tab-active'; //add active class to current tab
 						$tab_forms[] = $option_tab; //add current tab to forms to be rendered
 					}
-					if ( $tab_slug === 'primer_license' ) {
+					if ( $tab_slug === 'primer_licenses' ) {
 						$admin_url = admin_url( 'admin.php?page='.$tab_slug );
 					} else {
 						$admin_url = admin_url( 'admin.php?page=primer_settings&tab=' . str_replace( 'primer_', '', $tab_slug ) );
@@ -205,9 +205,9 @@ class Primer_Options {
 
 				array(
 					'name'      => __( 'Invoice name', 'primer' ),
-					'desc'      => __( 'Use this name to corresponding invoice field', 'primer' ),
-					'default'   => '',
-					'id'        => 'invoice_name',
+					'desc'      => __( '', 'primer' ),
+					'default'   => 'Έσοδα από Πώληση Εμπορευμάτων (Income from selling products)',
+					'id'        => 'invoice_name_gr_receipt',
 					'type'      => 'text',
 				),
 
@@ -215,9 +215,60 @@ class Primer_Options {
 					'name'      => __( 'Invoice Type', 'primer' ),
 					'desc'      => __( '', 'primer' ),
 					'default'   => '',
-					'id'        => 'invoice_type',
+					'id'        => 'invoice_type_gr_receipt',
 					'type'      => 'select',
-					'options'	=> array('' => __( 'Select invoice type', 'primer' )),
+					'options'	=> array('1.1' => __( 'Aπόδειξη Λιανικής πώλησης (Greek receipt)', 'primer' )),
+				),
+
+				array(
+					'name'      => __( 'Invoice name', 'primer' ),
+					'desc'      => __( '', 'primer' ),
+					'default'   => 'Έσοδα από Πώληση Εμπορευμάτων (Income from selling products)',
+					'id'        => 'invoice_name_gr_invoice',
+					'type'      => 'text',
+				),
+
+				array(
+					'name'      => __( 'Invoice Type', 'primer' ),
+					'desc'      => __( '', 'primer' ),
+					'default'   => '',
+					'id'        => 'invoice_type_gr_invoice',
+					'type'      => 'select',
+					'options'	=> array('1.1' => __( 'Τιμολόγιο Πώλησης (Greek invoice)', 'primer' )),
+				),
+
+				array(
+					'name'      => __( 'Invoice name', 'primer' ),
+					'desc'      => __( '', 'primer' ),
+					'default'   => 'Έσοδα από Παροχή Υπηρεσιών (Income from selling services)',
+					'id'        => 'invoice_name_gr_receipt_services',
+					'type'      => 'text',
+				),
+
+				array(
+					'name'      => __( 'Invoice Type', 'primer' ),
+					'desc'      => __( '', 'primer' ),
+					'default'   => '',
+					'id'        => 'invoice_type_gr_receipt_services',
+					'type'      => 'select',
+					'options'	=> array('1.3' => __( 'Απόδειξη Παροχής Υπηρεσιών (Greek receipt for services)', 'primer' )),
+				),
+
+				array(
+					'name'      => __( 'Invoice name', 'primer' ),
+					'desc'      => __( '', 'primer' ),
+					'default'   => 'Έσοδα από Παροχή Υπηρεσιών (Income from selling services)',
+					'id'        => 'invoice_name_gr_invoice_services',
+					'type'      => 'text',
+				),
+
+				array(
+					'name'      => __( 'Invoice Type', 'primer' ),
+					'desc'      => __( '', 'primer' ),
+					'default'   => '',
+					'id'        => 'invoice_type_gr_invoice_services',
+					'type'      => 'select',
+					'options'	=> array('1.3' => __( 'Τιμολόγιο Παροχής (Greek invoice for services)', 'primer' )),
 				),
 
 
@@ -246,9 +297,9 @@ class Primer_Options {
 					'desc'		=> '',
 					'id'		=> 'greek_template',
 					'type'		=> 'select',
-					'options'	=> array('' => __( 'Select Greek invoice template', 'primer' ), 'greek_template1' => __( 'Greek receipt template 1', 'primer' )),
+					'options'	=> array('greek_template1' => __( 'Greek invoice template', 'primer' )),
 					'after_field' => '
-						<a href="#" class="preview">'.__('Preview template', 'primer').'</a>
+						<a href="'.plugins_url('/primer/public/partials/gr_invoicetemplate_defaultA4.php').'" target="_blank" class="button preview">'.__('Preview template', 'primer').'</a>
 					',
 				),
 
@@ -257,13 +308,13 @@ class Primer_Options {
 					'desc'		=> '',
 					'id'		=> 'english_template',
 					'type'		=> 'select',
-					'options'	=> array('' => __( 'Select English invoice template', 'primer' ), 'english_template1' => __( 'English receipt template 1', 'primer' )),
+					'options'	=> array('english_template1' => __( 'English invoice template', 'primer' )),
 					'after_field' => '
-						<a href="'.plugins_url('/primer/public/partials/invoicetemplate_defaultA4.php').'" target="_blank" class="preview">'.__('Preview template', 'primer').'</a>
+						<a href="'.plugins_url('/primer/public/partials/invoicetemplate_defaultA4.php').'" target="_blank" class="button preview">'.__('Preview template', 'primer').'</a>
 					',
 				),
 
-				array(
+				/*array(
 					'name'		=> __( 'VAT Settings:', 'primer' ),
 					'desc'		=> __('', 'primer'),
 					'default'	=> '',
@@ -291,7 +342,7 @@ class Primer_Options {
 					'default'	=> '',
 					'type'		=> 'select',
 					'id'		=> 'standard_vat_rates',
-					'options'	=> $this->get_standard_rates(),
+					'options'	=> array('1' => '1'),
 				),
 
 				array(
@@ -300,7 +351,7 @@ class Primer_Options {
 					'default'	=> '',
 					'type'		=> 'select',
 					'id'		=> 'seventeen_vat_rates',
-					'options'	=> $this->get_standard_rates(),
+					'options'	=> array('4' => '4'),
 				),
 
 				array(
@@ -309,7 +360,7 @@ class Primer_Options {
 					'default'	=> '',
 					'type'		=> 'select',
 					'id'		=> 'thirteen_vat_rates',
-					'options'	=> $this->get_standard_rates(),
+					'options'	=> array('2' => '2')
 				),
 
 				array(
@@ -318,7 +369,7 @@ class Primer_Options {
 					'default'	=> '',
 					'type'		=> 'select',
 					'id'		=> 'nine_vat_rates',
-					'options'	=> $this->get_standard_rates(),
+					'options'	=> array('5' => '5')
 				),
 
 				array(
@@ -327,7 +378,7 @@ class Primer_Options {
 					'default'	=> '',
 					'type'		=> 'select',
 					'id'		=> 'six_vat_rates',
-					'options'	=> $this->get_standard_rates(),
+					'options'	=> array('3' => '3')
 				),
 
 				array(
@@ -336,8 +387,17 @@ class Primer_Options {
 					'default'	=> '',
 					'type'		=> 'select',
 					'id'		=> 'four_vat_rates',
-					'options'	=> $this->get_standard_rates(),
+					'options'	=> array('6' => '6')
 				),
+
+				array(
+					'name'		=> __( '0%', 'primer' ),
+					'desc'		=> __('', 'primer'),
+					'default'	=> '',
+					'type'		=> 'select',
+					'id'		=> 'zero_vat_rates',
+					'options'	=> array('7' => '7')
+				),*/
 			)
 		) );
 
@@ -550,6 +610,23 @@ class Primer_Options {
 				),
 
 
+			)
+		) );
+
+		$this->option_metabox[] = apply_filters( 'primer_licenses_option_fields', array(
+			'id'		 => $prefix . 'licenses',
+			'title'		 => __( 'Licence and General Settings', 'primer' ),
+			'menu_title' => __( 'Licence credentials', 'primer' ),
+			'desc'			=> __( '', 'primer' ),
+			'show_on'    => array( 'key' => 'options-page', 'value' => array( 'licenses' ), ),
+			'show_names' => true,
+			'fields' => array(
+				array(
+					'name' => __('Licence credentials', 'primer'),
+					'id' => 'licence_credentials',
+					'type' => 'title',
+					'desc' => __( '', 'primer' ),
+				)
 			)
 		) );
 

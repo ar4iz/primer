@@ -525,21 +525,7 @@ do_action( 'primer_before_receipt_display' ); ?>
 						<td>
 							<table class="main_info_table">
 								<tbody>
-								<tr class="heading">
-									<td>
-										<p>INVOICE TYPE</p>
-									</td>
-
-									<td>
-										<p>INVOICE NUMBER</p>
-									</td>
-									<td>
-										<p>DATE</p>
-									</td>
-									<td>
-										<p>TIME</p>
-									</td>
-								</tr>
+								<?php primer_main_info_table_head(); ?>
 								<?php primer_display_invoice_information(); ?>
 								</tbody>
 							</table>
@@ -568,35 +554,7 @@ do_action( 'primer_before_receipt_display' ); ?>
 		</div>
 		<div class="product_container">
 			<table class="product_table">
-				<tr class="heading">
-					<td class="code_head_td">
-						<p> PRODUCT ID</p>
-					</td>
-					<td class="description_head_td">
-						<p> DESCRIPTION</p>
-					</td>
-					<td class="quantity_head_td">
-						<p> PIECES</p>
-					</td>
-					<td class="mu_head_td">
-						<p> UNIT</p>
-					</td>
-					<td class="up_head_td">
-						<p> PRICE PER UNIT</p>
-					</td>
-					<td class="disc_head_td">
-						<p> SALE</p>
-					</td>
-					<td class="vat_head_td">
-						<p> VAT %</p>
-					</td>
-					<td class="pricenovat_head_td">
-						<p> PRICE BEFORE TAXES</p>
-					</td>
-					<td class="price_head_td">
-						<p> TOTAL AMOUNT</p>
-					</td>
-				</tr>
+				<?php primer_display_issuer_product_head(); ?>
 				<?php primer_display_issuer_product(); ?>
 			</table>
 		</div>
@@ -614,22 +572,22 @@ do_action( 'primer_before_receipt_display' ); ?>
 						<?php primer_display_issuer_comments(); ?>
 						<div class="cont_signs">
 							<div class="cont_sign_left">
-								<span class="sign_left">ISSUER</span>
+								<?php primer_sign_issuer_title(); ?>
 								<br>
 								<br>
 								<br>
 								<br>
 								<hr class="sign_hr">
-								<span class="fullname_sign">FULL NAME SIGNATURE</span>
+								<?php primer_sign_issuer_fullname(); ?>
 							</div>
 							<div class="cont_sign_right">
-								<span class="sign_right">RECEIPTIENT</span>
+								<?php primer_sign_recipient_title(); ?>
 								<br>
 								<br>
 								<br>
 								<br>
 								<hr class="sign_hr">
-								<span class="fullname_sign">FULL NAME <BR>SIGNATURE</span>
+								<?php primer_sign_recipient_fullname(); ?>
 							</div>
 						</div>
 					</td>
@@ -638,7 +596,7 @@ do_action( 'primer_before_receipt_display' ); ?>
 					</td>
 					<td>
 						<div class="count_totals_container">
-							<span>SUM OF UNITS: </span> <span class="count_total_prods"></span>
+							<span><?php primer_sum_unit_title(); ?></span> <span class="count_total_prods"></span>
 						</div>
 						<div class="total_container">
 

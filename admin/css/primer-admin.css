@@ -4,7 +4,9 @@
  */
 
 #tables-filter .alignleft {
-    float: none;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
 }
 .filter_blocks_wrapper {
     display: flex;
@@ -14,6 +16,17 @@
     display: flex;
     align-items: baseline;
     margin-bottom: 10px;
+}
+.filter_blocks_wrapper .select2-container--default .select2-selection--single {
+    border: 1px solid rgb(140, 143, 148);
+    border-radius: 3px;
+}
+.filter_blocks_wrapper .select2-container--default .select2-selection--single .select2-selection__placeholder {
+    color: #2c3338;
+    font-size: 14px;
+}
+.filter_blocks_wrapper .select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: 30px;
 }
 .tablenav .filter_block input {
     line-height: 28px;
@@ -40,6 +53,10 @@
 
 .filter_blocks_wrapper .left_wrap, .filter_blocks_wrapper .right_wrap {
     max-width: 600px;
+    width: 100%;
+}
+#primer_order_table .filter_blocks_wrapper .right_wrap {
+    max-width: 380px;
     width: 100%;
 }
 

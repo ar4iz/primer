@@ -189,7 +189,7 @@ class PrimerOrderList {
 	public function get_with_params($order_date_from, $order_date_to, $order_customer, $order_status, $order_receipt_status) {
 		global $woocommerce;
 
-		$order_status = isset($_REQUEST['order_status']) ? $_REQUEST['order_status'] : array('wc-pending', 'wc-processing', 'wc-on-hold', 'wc-completed');
+		$order_status = isset($_GET['primer_order_status']) ? $_GET['primer_order_status'] : array('wc-pending', 'wc-processing', 'wc-on-hold', 'wc-completed');
 
 		$order_args = array(
 			'return' => 'ids',
@@ -198,9 +198,16 @@ class PrimerOrderList {
 			'order' => 'DESC',
 		);
 		$order_args['numberposts'] = -1;
+		$order_args2 = $order_args;
 
-//		$order_args['meta_key'] = '_customer_user';
-//		$order_args['meta_value'] = $_GET['order_customer'];
+		// receipt_status
+		$order_args['meta_key'] = '_customer_user';
+		$order_args['meta_value'] = $_GET['primer_order_client'];
+
+		if (!empty($_GET['primer_receipt_status'])) {
+			$order_args2['meta_key'] = 'receipt_status';
+			$order_args2['meta_value'] = $_GET['primer_receipt_status'];
+		}
 
 		$order_date_from = $_GET['order_date_from'];
 		$order_date_to = $_GET['order_date_to'];
@@ -217,19 +224,14 @@ class PrimerOrderList {
 			$order_args['date_created'] = $order_date_from.'...'.$order_date_to;
 		}
 
-		if (!empty($order_receipt_status)) {
-			$order_args['meta_query'] = array(
-				'relation' => 'AND',
-				array(
-					'key' => 'receipt_status',
-					'value' => $order_receipt_status
-				)
-			);
-//			$order_args['receipt_status'] = $order_receipt_status;
-		}
-
 
 		$query_orders = wc_get_orders($order_args);
+		$query_orders2 = wc_get_orders($order_args2);
+		if (!empty($_GET['primer_order_client']) && !empty($_GET['primer_receipt_status'])) {
+			$unique_query_orders = array_intersect($query_orders, $query_orders2);
+			$query_orders = $unique_query_orders;
+		}
+
 //		$query_orders = new WC_Order_Query( $order_args );
 //		$orders       = $query_orders->get_orders();
 		$orders       = $query_orders;

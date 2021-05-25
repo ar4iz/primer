@@ -203,6 +203,9 @@ class Primer {
 
 		$this->loader->add_filter( 'default_checkout_shipping_country', $plugin_admin, 'primer_set_shipping_country' );
 
+
+		$this->loader->add_filter( 'woocommerce_order_data_store_cpt_get_orders_query', $plugin_admin, 'handle_custom_query_var', 1, 3 );
+
 		$this->loader->add_action('woocommerce_checkout_process', $plugin_admin, 'primer_checkout_field_process');
 		$this->loader->add_action('manage_shop_order_posts_custom_column', $plugin_admin, 'primer_icon_to_order_notes_column', 15, 1);
 

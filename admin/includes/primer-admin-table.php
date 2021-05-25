@@ -14,10 +14,11 @@ class PrimerReceipts extends WP_List_Table {
 			array(
 				'singular' => __( 'Order', 'primer' ),
 				'plural' => __( 'Orders', 'primer' ),
-				'ajax' => true,
+				'ajax' => false,
 			)
 		);
 
+		$this->prepare_items();
 
 		add_action( 'wp_print_scripts', [ __CLASS__, '_list_table_css' ] );
 
@@ -85,8 +86,15 @@ class PrimerReceipts extends WP_List_Table {
 	}
 
 	function extra_tablenav( $which ){
+		if ( $which !== 'bottom' ) {
 		$primer_orders = new PrimerOrderList();
 		$primer_orders_customers = $primer_orders->get_users_from_orders();
+		$unique_customers = [];
+			foreach ( $primer_orders_customers as $primer_orders_customer ) {
+				$hash = $primer_orders_customer['order_client_id'];
+				$unique_customers[$hash] = $primer_orders_customer;
+			}
+			$order_customers = array_values($unique_customers);
 		?>
 		<div class="alignleft actions">
 			<h2><?php _e('Filters', 'primer'); ?></h2>
@@ -116,14 +124,15 @@ class PrimerReceipts extends WP_List_Table {
 					</div>
 					<div class="filter_block">
 						<label for="primer_order_client" style="float: left;"><?php _e('Client: ', 'primer'); ?></label>
-							<select name="primer_order_client" id="primer_order_client">
-								<option value=""><?php _e('Select clients', 'primer'); ?></option>
+							<select name="primer_order_client" id="primer_order_client" data-placeholder="<?php _e('Select clients', 'primer'); ?>">
+								<option value=""></option>
 								<?php
-								foreach ( $primer_orders_customers as $primer_orders_customer => $order_customer ) {
+								$get_customer = isset($_GET['primer_order_client']) ? $_GET['primer_order_client'] : '';
+								foreach ( $order_customers as $primer_orders_customer => $order_customer ) {
 									if ($order_customer['order_client_id']) { ?>
-										<option value="<?php echo $order_customer['order_client_id']; ?>"><?php echo $order_customer['order_client']; ?></option>
+										<option value="<?php echo $order_customer['order_client_id']; ?>" <?php selected($get_customer, $order_customer['order_client_id']); ?>><?php echo $order_customer['order_client']; ?></option>
 									<?php } else { ?>
-										<option value="<?php echo $order_customer['order_client_id']; ?>"><?php _e('Guest client', 'primer'); ?></option>
+										<option value="<?php echo $order_customer['order_client_id']; ?>" <?php selected($get_customer, $order_customer['order_client_id']); ?>><?php _e('Guest client', 'primer'); ?></option>
 									<?php }
 								} ?>
 							</select>
@@ -136,8 +145,12 @@ class PrimerReceipts extends WP_List_Table {
 								<?php
 								$status_of_orders = wc_get_order_statuses();
 
+								$get_order_status = isset($_GET['primer_order_status']) ? $_GET['primer_order_status'] : '';
+
 								foreach ( $status_of_orders as $status_k => $status_value ) { ?>
-									<option value="<?php echo $status_k; ?>"><?php echo $status_value; ?></option>
+									<option value="<?php echo $status_k; ?>" <?php if (is_array($get_order_status)) {
+										if (in_array($status_k, $get_order_status)) echo 'selected';
+									}?>><?php echo $status_value; ?></option>
 								<?php }
 								?>
 							</select>
@@ -146,12 +159,22 @@ class PrimerReceipts extends WP_List_Table {
 					<div class="filter_block">
 						<label for="primer_receipt_status" style="float: left;"><?php _e('Receipt Status: ', 'primer'); ?></label>
 							<select name="primer_receipt_status" id="primer_receipt_status">
-								<option value=""><?php _e('All', 'primer'); ?></option>
-								<option value="issued"><?php _e('Issued', 'primer'); ?></option>
-								<option value="not_issued"><?php _e('Not Issued', 'primer'); ?></option>
+							<?php
+							$get_status = isset($_GET['primer_receipt_status']) ? $_GET['primer_receipt_status'] : '';
+							$status_of_receipts = array(
+									'' => 'All',
+									'issued' => 'Issued',
+									'not_issued' => 'Not Issued',
+								);
+
+							foreach ( $status_of_receipts as $status_k => $status_value ) { ?>
+									<option value="<?php echo $status_k; ?>" <?php selected($status_k, $get_status); ?>><?php echo $status_value; ?></option>
+								<?php }
+							?>
 							</select>
 					</div>
 				</div>
+				<div><input type="submit" class="button" name="filter_action" value="<?php _e('Filter', 'primer'); ?>" /></div>
 			</div>
 
 		</div>
@@ -246,24 +269,25 @@ class PrimerReceipts extends WP_List_Table {
 			});
 		</script>
 	<?php
+		}
 	}
 
 	function prepare_items() {
 
 		$per_page = 20;
 
+		$get_total_orders = new PrimerOrderList();
+
+		if (isset($_GET['primer_order_status']) || isset($_GET['primer_order_client']) || isset($_GET['order_date_from']) || isset($_GET['order_date_to'])|| isset($_GET['primer_receipt_status'])) {
+			$get_orders_list = $get_total_orders->get_with_params($_REQUEST['order_date_from'], $_REQUEST['order_date_to'], $_GET['primer_order_client'], $_REQUEST['primer_order_status'], $_GET['primer_receipt_status']);
+		} else {
+			$get_orders_list = $get_total_orders->get();
+		}
+
 		$columns  = $this->get_columns();
 		$hidden   = $this->hidden_columns;
 		$sortable = $this->get_sortable_columns();
 		$this->_column_headers = array( $columns, $hidden, $sortable );
-
-		$get_total_orders = new PrimerOrderList();
-
-		if (isset($_GET['order_status']) || isset($_GET['order_customer']) || isset($_GET['order_date_from']) || isset($_GET['order_date_to'])|| isset($_GET['order_receipt_status'])) {
-			$get_orders_list = $get_total_orders->get_with_params($_REQUEST['order_date_from'], $_REQUEST['order_date_to'], $_GET['order_customer'], $_REQUEST['order_status'], $_GET['order_receipt_status']);
-		} else {
-			$get_orders_list = $get_total_orders->get();
-		}
 
 
 		$this->items = $get_orders_list;
@@ -294,64 +318,11 @@ class PrimerReceipts extends WP_List_Table {
 		);
 	}
 
-	function display() {
-		/**
-		 * Adds a nonce field
-		 */
+	/*function display() {
 		wp_nonce_field( 'ajax-order-list-nonce', '_ajax_order_list_nonce' );
 
 		parent::display();
-	}
-
-	/**
-	 * @Override ajax_response method
-	 */
-	function ajax_response() {
-		check_ajax_referer( 'ajax-order-list-nonce', '_ajax_order_list_nonce' );
-
-		$this->prepare_items();
-
-
-		extract( $this->_args );
-		extract( $this->_pagination_args, EXTR_SKIP );
-
-
-		ob_start();
-		if ( ! empty( $_REQUEST['no_placeholder'] ) )
-			$this->display_rows();
-		else
-			$this->display_rows_or_placeholder();
-		$rows = ob_get_clean();
-
-		ob_start();
-		$this->print_column_headers();
-		$headers = ob_get_clean();
-
-		ob_start();
-		$this->pagination('top');
-		$pagination_top = ob_get_clean();
-
-		ob_start();
-		$this->pagination('bottom');
-		$pagination_bottom = ob_get_clean();
-
-		$response = array( 'rows' => $rows );
-		$response['pagination']['top'] = $pagination_top;
-		$response['pagination']['bottom'] = $pagination_bottom;
-
-		$response['column_headers'] = $headers;
-
-		if ( isset( $total_items ) )
-			$response['total_items_i18n'] = sprintf( _n( '1 item', '%s items', $total_items ), number_format_i18n( $total_items ) );
-
-		if ( isset( $total_pages ) ) {
-			$response['total_pages'] = $total_pages;
-			$response['total_pages_i18n'] = number_format_i18n( $total_pages );
-		}
-
-		die( wp_json_encode( $response ) );
-
-	}
+	}*/
 
 	function no_items() {
 		_e( 'No orders found.', 'primer' );
@@ -360,7 +331,7 @@ class PrimerReceipts extends WP_List_Table {
 	function process_bulk_action() {
 		//Detect when a bulk action is being triggered... then perform the action.
 
-		$orders = isset( $_REQUEST['orders'] ) ? $_REQUEST['orders'] : array();
+		$orders = isset( $_REQUEST['wp_ajax_list_order'] ) ? $_REQUEST['wp_ajax_list_order'] : array();
 		$orders = array_map( 'sanitize_text_field', $orders );
 
 		$current_action = $this->current_action();
@@ -453,7 +424,7 @@ function _ajax_fetch_primer_order_callback() {
 	$primer_order_list_table = new PrimerReceipts();
 	$primer_order_list_table->ajax_response();
 }
-add_action( 'wp_ajax__ajax_fetch_primer_order', '_ajax_fetch_primer_order_callback' );
+//add_action( 'wp_ajax__ajax_fetch_primer_order', '_ajax_fetch_primer_order_callback' );
 
 /**
  * Action wp_ajax for fetching the first time table structure
@@ -474,7 +445,7 @@ function ajax_primer_display_callback() {
 
 }
 
-add_action('wp_ajax_ajax_primer_display', 'ajax_primer_display_callback');
+//add_action('wp_ajax_ajax_primer_display', 'ajax_primer_display_callback');
 
 add_action('wp_ajax_convert_select_orders', 'convert_select_orders');
 function convert_select_orders() {
@@ -857,4 +828,4 @@ function fetch_primer_script() {
 	</script>
 <?php }
 
-add_action('admin_footer', 'fetch_primer_script');
+//add_action('admin_footer', 'fetch_primer_script');

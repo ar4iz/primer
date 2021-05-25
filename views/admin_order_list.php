@@ -4,7 +4,8 @@
 	<!-- Now we can render the completed list table -->
 	<div id="primer_order_table">
 		<?php
-		wp_nonce_field( 'ajax-order-list-nonce', '_ajax_order_list_nonce' );
+//		wp_nonce_field( 'ajax-order-list-nonce', '_ajax_order_list_nonce' );
+		$this->display();
 		?>
 	</div>
 	<div class="submit convert_orders">

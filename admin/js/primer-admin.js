@@ -66,6 +66,11 @@
 			return true;
 		});*/
 
+		$('#primer_order_client').selectWoo({
+			allowClear:  true,
+			placeholder: $( this ).data( 'placeholder' )
+		});
+
 		$(document).on('submit', '#email-test-form', function (e) {
 			e.preventDefault();
 			var data = $('#email-test-form').serialize();

@@ -61,8 +61,8 @@ class PrimerReceiptList {
 			while ($receipt_query->have_posts()):
 				$receipt_query->the_post();
 
-				$user_display_name = get_post_meta(get_the_ID(), 'receipt_client', true);
-				$user_data = get_user_by('slug', $user_display_name);
+				$user_display_name = get_post_meta(get_the_ID(), 'receipt_client_id', true);
+				$user_data = get_user_by('ID', $user_display_name);
 
 				$this->receipt_customers[$receipt_count]['receipt_client'] = get_post_meta(get_the_ID(), 'receipt_client', true);
 				$this->receipt_customers[$receipt_count]['receipt_client_id'] = $user_data->ID;

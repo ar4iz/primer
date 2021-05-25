@@ -108,8 +108,14 @@ class Primer_Admin {
 			wp_enqueue_style('primer-bootstrap-css');
 			wp_register_style('primer-bootstrap-select-css', PRIMER_URL . '/public/css/bootstrap-select.min.css', array(), PRIMER_VERSION);
 			wp_enqueue_style('primer-bootstrap-select-css');
+
+			wp_register_style('primer-select-woo', PRIMER_URL . '/public/css/select2.css', array(), PRIMER_VERSION);
+			wp_enqueue_style('primer-select-woo');
+
 			wp_enqueue_script('primer-bootstrap-js', PRIMER_URL . '/public/js/bootstrap.bundle.min.js', array('jquery'), PRIMER_VERSION, true);
 			wp_enqueue_script('primer-bootstrap-select-js', PRIMER_URL . '/public/js/bootstrap-select.min.js', array('jquery'), PRIMER_VERSION, true);
+
+			wp_enqueue_script('primer-select-woo-js', PRIMER_URL . '/public/js/selectWoo.full.js', array('jquery'), PRIMER_VERSION, false);
 		}
 
 	}
@@ -337,12 +343,38 @@ class Primer_Admin {
 			array_unshift( $tax_classes, '' );
 		}
 
+		$tax_check = 'true';
+
 		foreach ( $tax_classes as $tax_class ) { // For each tax class, get all rates.
-			$taxes         = WC_Tax::get_rates_for_tax_class( $tax_class );
-			if (empty($taxes)) {
-//				WC_Tax::_insert_tax_rate($tax_rate);
+			if (empty($tax_class)) {
+				$taxes         = WC_Tax::get_rates_for_tax_class( $tax_class );
+				$count_taxes = count((array)$taxes);
+				if ($count_taxes == 0) {
+					$tax_check = 'false';
+				}
 			}
 		}
+		if ($tax_check == 'false') {
+			WC_Tax::_insert_tax_rate($tax_rate);
+		}
+	}
+
+	/**
+	 * Handle a custom 'customvar' query var to get orders with the 'customvar' meta.
+	 * @param array $query - Args for WP_Query.
+	 * @param array $query_vars - Query vars from WC_Order_Query.
+	 * @return array modified $query
+	 */
+	public function handle_custom_query_var( $query, $query_vars, $that ) {
+
+		if ( ! empty($query_vars['meta_query']['1']['key']) ) {
+			$query['meta_query'][] = array(
+				'key' => 'receipt_status',
+				'value' => esc_attr($query_vars['receipt_status'] ),
+			);
+		}
+
+		return $query;
 	}
 
 	public function primer_set_shipping_country() {

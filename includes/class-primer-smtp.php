@@ -13,10 +13,12 @@ class PrimerSMTP {
 		$this->opts        = get_option( 'primer_emails' );
 		$this->opts        = ! is_array( $this->opts ) ? array() : $this->opts;
 
+		require_once 'class-primer-smtp-utils.php';
+
 		add_filter( 'wp_mail', array( $this, 'wp_mail' ), 2147483647 );
 		add_action( 'phpmailer_init', array( $this, 'init_smtp' ), 999 );
-
-		require_once 'class-primer-smtp-utils.php';
+		add_action( 'admin_notices', array( $this, 'admin_notices' ) );
+		add_action( 'wp_mail_failed', array( $this, 'wp_mail_failed' ) );
 	}
 
 	public static function get_instance() {
@@ -30,49 +32,116 @@ class PrimerSMTP {
 		return $args;
 	}
 
-	public function init_smtp( &$phpmailer ) {
-		//check if SMTP credentials have been configured.
-
-		/* Set the mailer type as per config above, this overrides the already called isMail method */
-		$phpmailer->IsSMTP();
-
-		$from_email = $this->opts['send_from'];
-
-		$phpmailer->From     = $from_email;
-		$phpmailer->SetFrom( $phpmailer->From );
-
-		/* Set the other options */
-		$phpmailer->Host = $this->opts['smtp_server'];
-		$phpmailer->Port = $this->opts['port'];
-
-		if ( 'yes' === $this->opts['autentication'] ) {
-			$phpmailer->SMTPAuth = true;
-			$phpmailer->Username = $this->opts['name'];
-			$phpmailer->Password = $this->get_password();
+	public function wp_mail_failed( $wp_error ) {
+		if ( ! empty( $wp_error->errors ) && ! empty( $wp_error->errors['wp_mail_failed'] ) && is_array( $wp_error->errors['wp_mail_failed'] ) ) {
+			echo '<div class="notice notice-error is-dismissible"><p><strong>';
+			echo '*** ' . implode( ' | ', $wp_error->errors['wp_mail_failed'] ) . " ***\r\n";
+			echo '</strong></p></div>';
 		}
-		//PHPMailer 5.2.10 introduced this option. However, this might cause issues if the server is advertising TLS with an invalid certificate.
-		$phpmailer->SMTPAutoTLS = false;
-
-		// Insecure SSL option enabled
-		$phpmailer->SMTPOptions = array(
-			'ssl' => array(
-				'verify_peer'       => false,
-				'verify_peer_name'  => false,
-				'allow_self_signed' => true,
-			),
-		);
-
-		//set reasonable timeout
-		$phpmailer->Timeout = 10;
-
 	}
 
-	public function credentials_configured() {
-		$credentials_configured = true;
-		if ( ! isset( $this->opts['send_from'] ) || empty( $this->opts['send_from'] ) ) {
-			$credentials_configured = false;
+	public function init_smtp( &$phpmailer ) {
+		//check if SMTP credentials have been configured.
+		if ( ! $this->credentials_configured() ) {
+			return false;
 		}
-		return $credentials_configured;
+
+		global $wp_version;
+
+		if ( version_compare( $wp_version, '5.4.99' ) > 0 ) {
+			require_once ABSPATH . WPINC . '/PHPMailer/PHPMailer.php';
+			require_once ABSPATH . WPINC . '/PHPMailer/SMTP.php';
+			require_once ABSPATH . WPINC . '/PHPMailer/Exception.php';
+			$mail = new PHPMailer( true );
+		} else {
+			require_once ABSPATH . WPINC . '/class-phpmailer.php';
+			$mail = new \PHPMailer( true );
+		}
+
+		try {
+
+			$charset       = get_bloginfo( 'charset' );
+			$mail->CharSet = $charset;
+
+			$from_name  = get_bloginfo( 'name' );
+			$from_email = $this->opts['from_email_field'];
+
+			$mail->IsSMTP();
+
+
+			// send plain text test email
+			$mail->ContentType = 'text/html';
+			$mail->IsHTML( true );
+
+
+			/* If using smtp auth, set the username & password */
+			if ( 'yes' === $this->opts['smtp_settings']['authentication'] ) {
+				$mail->SMTPAuth = true;
+				$mail->Username = $this->opts['smtp_settings']['username'];
+				$mail->Password = $this->get_password();
+			}
+
+			/* Set the SMTPSecure value, if set to none, leave this blank */
+			if ( 'none' !== $this->opts['smtp_settings']['type_encryption'] ) {
+				$mail->SMTPSecure = $this->opts['smtp_settings']['type_encryption'];
+			}
+
+
+			/* PHPMailer 5.2.10 introduced this option. However, this might cause issues if the server is advertising TLS with an invalid certificate. */
+			$mail->SMTPAutoTLS = true;
+
+			// Insecure SSL option enabled
+			/*$mail->SMTPOptions = array(
+				'ssl' => array(
+					'verify_peer'       => false,
+					'verify_peer_name'  => false,
+					'allow_self_signed' => true,
+				),
+			);*/
+
+			/* Set the other options */
+			if (!empty($this->opts['smtp_settings']['smtp_server'])) {
+				$mail->Host = $this->opts['smtp_settings']['smtp_server'];
+			}
+			if (!empty($this->opts['smtp_settings']['port'])) {
+				$mail->Port = $this->opts['smtp_settings']['port'];
+			}
+
+
+			if (($this->opts['smtp_settings']['authentication']) == 'no') {
+				$mail->Mailer = 'mail';
+			}
+
+			//Add reply-to if set in settings.
+			if ( ! empty( $this->opts['reply_to_email'] ) ) {
+				$mail->AddReplyTo( $this->opts['reply_to_email'], $from_name );
+			}
+
+			$mail->SetFrom( $from_email, $from_name );
+			//This should set Return-Path header for servers that are not properly handling it, but needs testing first
+			//$mail->Sender		 = $mail->From;
+			global $debug_msg;
+			$debug_msg         = '';
+			$mail->Debugoutput = function ( $str, $level ) {
+				global $debug_msg;
+				$debug_msg .= $str;
+			};
+			$mail->SMTPDebug   = 1;
+			//set reasonable timeout
+			$mail->Timeout = 10;
+
+			/* Send mail and return result */
+			$mail->Send();
+			$mail->ClearAddresses();
+			$mail->ClearAllRecipients();
+
+
+		} catch ( \Exception $e ) {
+			$ret['error'] = $mail->ErrorInfo;
+		} catch ( \Throwable $e ) {
+			$ret['error'] = $mail->ErrorInfo;
+		}
+
 	}
 
 	public function test_mail( $to_email, $subject, $message ) {
@@ -99,28 +168,27 @@ class PrimerSMTP {
 			$mail->CharSet = $charset;
 
 			$from_name  = get_bloginfo( 'name' );
-			$from_email = $this->opts['send_from'];
+			$from_email = $this->opts['from_email_field'];
 
 			$mail->IsSMTP();
 
 
 			// send plain text test email
-			$mail->ContentType = 'text/plain';
-			$mail->IsHTML( false );
+			$mail->ContentType = 'text/html';
+			$mail->IsHTML( true );
 
-			if (!empty($this->opts['smtp_server']) && !empty($this->opts['port']) && !empty($this->opts['username']) && !empty($this->get_password())) {
-				$this->opts['autentication'] = 'yes';
-				update_option('primer_emails', $this->opts);
-			}
 
 			/* If using smtp auth, set the username & password */
-			/*if ($this->opts['autentication']) {
-				if ( 'yes' === $this->opts['autentication'] ) {
-					$mail->SMTPAuth = true;
-					$mail->Username = $this->opts['name'];
-					$mail->Password = $this->get_password();
-				}
-			}*/
+			if ( 'yes' === $this->opts['smtp_settings']['authentication'] ) {
+				$mail->SMTPAuth = true;
+				$mail->Username = $this->opts['smtp_settings']['username'];
+				$mail->Password = $this->get_password();
+			}
+
+			/* Set the SMTPSecure value, if set to none, leave this blank */
+			if ( 'none' !== $this->opts['smtp_settings']['type_encryption'] ) {
+				$mail->SMTPSecure = $this->opts['smtp_settings']['type_encryption'];
+			}
 
 
 			/* PHPMailer 5.2.10 introduced this option. However, this might cause issues if the server is advertising TLS with an invalid certificate. */
@@ -136,14 +204,15 @@ class PrimerSMTP {
 			);*/
 
 			/* Set the other options */
-			if (!empty($this->opts['smtp_server'])) {
-				$mail->Host = $this->opts['smtp_server'];
+			if (!empty($this->opts['smtp_settings']['smtp_server'])) {
+				$mail->Host = $this->opts['smtp_settings']['smtp_server'];
 			}
-			if (!empty($this->opts['port'])) {
-				$mail->Port = $this->opts['port'];
+			if (!empty($this->opts['smtp_settings']['port'])) {
+				$mail->Port = $this->opts['smtp_settings']['port'];
 			}
 
-			if (empty($this->opts['smtp_server']) || empty($this->opts['port'])) {
+
+			if (($this->opts['smtp_settings']['authentication']) == 'no') {
 				$mail->Mailer = 'mail';
 			}
 
@@ -195,9 +264,41 @@ class PrimerSMTP {
 		return $ret;
 	}
 
+	public function admin_notices() {
+		if (! $this->credentials_configured()) {
+			$settings_url = admin_url() . 'admin.php?page=primer_settings&tab=emails'; ?>
+			<div class="error">
+				<p>
+					<?php
+					printf( __( 'Please configure your SMTP credentials in the <a href="%s">settings menu</a> in order to send email using SMTP.', 'primer' ), esc_url( $settings_url ) );
+					?>
+				</p>
+			</div>
+		<?php }
+
+	}
+
 	public function get_password() {
-		$temp_password = isset( $this->opts['password'] ) ? $this->opts['password'] : '';
+		$temp_password = isset( $this->opts['smtp_settings']['password'] ) ? $this->opts['smtp_settings']['password'] : '';
 		if ( '' === $temp_password ) {
+			return '';
+		}
+
+		try {
+
+			if ( get_option('primer_pass_encrypted') ) {
+				// this is encrypted password
+				$cryptor = Primer_SMTP_Utils::get_instance();
+				$decrypted = $cryptor->decrypt_password( $temp_password );
+				//check if encryption option is disabled
+				if ( empty( $this->opts['smtp_settings']['encrypt_pass'] ) ) {
+					//it is. let's save decrypted password
+					$this->opts['smtp_settings']['password'] = $this->encrypt_password( addslashes( $decrypted ) );
+					update_option('primer_emails', $this->opts);
+				}
+				return $decrypted;
+			}
+		} catch ( Exception $e ) {
 			return '';
 		}
 
@@ -226,17 +327,25 @@ class PrimerSMTP {
 			return '';
 		}
 
-		if ( empty( $this->opts['encrypt_pass'] ) || ! extension_loaded( 'openssl' ) ) {
+		if ( empty( $this->opts['smtp_settings']['encrypt_pass'] ) || ! extension_loaded( 'openssl' ) ) {
 			// no openssl extension loaded - we can't encrypt the password
 			$password = base64_encode( $pass ); //phpcs:ignore
-			update_option( 'primer_smtp_pass_encrypted', false );
+			update_option( 'primer_pass_encrypted', false );
 		} else {
 			// let's encrypt password
 			$cryptor  = Primer_SMTP_Utils::get_instance();
 			$password = $cryptor->encrypt_password( $pass );
-			update_option( 'primer_smtp_pass_encrypted', true );
+			update_option( 'primer_pass_encrypted', true );
 		}
 		return $password;
+	}
+
+	public function credentials_configured() {
+		$credentials_configured = true;
+		if ( ! isset( $this->opts['from_email_field'] ) || empty( $this->opts['from_email_field'] ) ) {
+			$credentials_configured = false;
+		}
+		return $credentials_configured;
 	}
 }
 

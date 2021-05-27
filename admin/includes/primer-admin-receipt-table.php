@@ -99,8 +99,8 @@ class PrimerReceipt extends WP_List_Table {
 						</div>
 						<div class="filter_block">
 						<label for="primer_receipt_client" style="float: left;"><?php _e('Client: ', 'primer'); ?></label>
-							<select name="primer_receipt_client" id="primer_receipt_client">
-								<option value=""><?php _e('Select clients', 'primer'); ?></option>
+							<select name="primer_receipt_client" id="primer_receipt_client" data-placeholder="<?php _e('Select clients', 'primer'); ?>">
+								<option value=""></option>
 								<?php
 								$primer_receipts_customers = array_unique($primer_receipts_customers, SORT_REGULAR);
 								$get_customer = isset($_GET['primer_receipt_client']) ? $_GET['primer_receipt_client'] : '';
@@ -157,7 +157,10 @@ class PrimerReceipt extends WP_List_Table {
                     $.fn.selectpicker.Constructor.BootstrapVersion = '4';
                     $('.selectpicker').selectpicker();
 
-                    $('#tables-filter .tablenav.bottom').remove();
+                    $('#primer_receipt_client').selectWoo({
+                        allowClear:  true,
+                        placeholder: $( this ).data( 'placeholder' )
+                    });
 
                     var select_year = $('select[name="primer_receipt_year"]').val();
 

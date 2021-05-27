@@ -32,7 +32,8 @@ do_action( 'primer_before_receipt_display' ); ?>
             html,
             body {
                 width: 210mm;
-                height: 297mm;
+                /*height: 297mm;*/
+                height: 247mm;
             }
 
             .page {
@@ -46,10 +47,12 @@ do_action( 'primer_before_receipt_display' ); ?>
                 page-break-after: always;
             }
         }
+        body { font-family: DejaVu Sans, sans-serif; }
 
         .page {
             width: 210mm;
-            height: 297mm;
+            height: 247mm;
+            /*height: 297mm;*/
             border: 1px solid #ddd;
         }
 
@@ -67,12 +70,14 @@ do_action( 'primer_before_receipt_display' ); ?>
             margin-left: 20px;
             margin-right: 20px;
             font-size: 10px;
-            font-family: 'Helvetica Neue', Helvetica, Helvetica, Arial, sans-serif;
+            /*font-family: 'Helvetica Neue', Helvetica, Helvetica, Arial, sans-serif;*/
             color: #555;
             /* border: 1px solid #ddd; */
             /* padding-bottom: 40px; */
-            width: calc(100% - 40px);
-            height: calc(100% - 20px);
+            /*width: calc(100% - 40px);
+            height: calc(100% - 20px);*/
+            width: 730px;
+            height: 900px;
             position: relative;
         }
 
@@ -87,9 +92,14 @@ do_action( 'primer_before_receipt_display' ); ?>
             min-width: 180px;
             max-width: 180px;
             margin: 0px;
-            padding: 0px;
-            padding-right: 12px;
+            padding: 0 12px 0 0;
         }
+        .total_td_block {
+			width: 263px;
+		}
+        .total_td_block .totals_table {
+            width: 263px;
+		}
 
         .logo_img {
             width: 100%;
@@ -116,10 +126,10 @@ do_action( 'primer_before_receipt_display' ); ?>
         }
 
         .total_container>.totals p {
-
             padding: 4px;
             margin: 4px;
             font-size: 12px;
+			white-space: nowrap;
         }
 
         .totals_table {
@@ -231,7 +241,7 @@ do_action( 'primer_before_receipt_display' ); ?>
 
         .rtl {
             direction: rtl;
-            font-family: Tahoma, 'Helvetica Neue', Helvetica, Helvetica, Arial, sans-serif
+            /*font-family: Tahoma, 'Helvetica Neue', Helvetica, Helvetica, Arial, sans-serif*/
         }
 
         .rtl table {
@@ -243,14 +253,14 @@ do_action( 'primer_before_receipt_display' ); ?>
         }
 
         .sender_sign {
-            position: absolute;
+            /*position: absolute;
             bottom: 20px;
-            left: 0px;
+            left: 0px;*/
         }
 
         .mydata_sign {
-            position: absolute;
-            float: right
+            /*position: absolute;*/
+            /*float: right*/
         }
 
         .pol_number {
@@ -293,7 +303,7 @@ do_action( 'primer_before_receipt_display' ); ?>
         }
 
         .footer_container {
-            position: absolute !important;
+            position: absolute;
             bottom: 10px;
             /* border: 1px solid #ddd; */
             width: 100%;
@@ -394,6 +404,7 @@ do_action( 'primer_before_receipt_display' ); ?>
             border: 1px solid #555;
             padding: 8px;
             border-radius: 8px;
+            height: 72px;
             overflow: hidden;
             margin-top: 10px;
         }
@@ -430,9 +441,9 @@ do_action( 'primer_before_receipt_display' ); ?>
 
         .union_doc_sign {
             position: absolute;
-            transform: rotate(-90deg);
+            transform: translate(-5px, -50%) rotate(-90deg);
             left: -164px;
-            bottom: 560px;
+            bottom: 50%;
             font-size: 11px;
             margin: 0px;
 
@@ -498,6 +509,7 @@ do_action( 'primer_before_receipt_display' ); ?>
 <body>
 	<div class="page">
 	<div class="invoice-box">
+		<p class="union_doc_sign skin">ΕΝΙΑΙΟ ΜΗΧΑΝΟΓΡΑΦΙΚΟ ΕΝΤΥΠΟ ΠΟΛΛΑΠΛΩΝ ΧΡΗΣΕΩΝ</p>
 		<div class="top_table">
 			<table>
 				<tbody>
@@ -505,9 +517,7 @@ do_action( 'primer_before_receipt_display' ); ?>
 					<td>
 						<table class="header_table">
 							<tr>
-								<td class="logo_container">
-									<?php primer_display_issuer_logo(); ?>
-								</td>
+								<td class="logo_container"><?php primer_display_issuer_logo(); ?></td>
 
 								<td class="issuer_container">
 									<?php primer_display_issuer_container(); ?>
@@ -594,7 +604,7 @@ do_action( 'primer_before_receipt_display' ); ?>
 					<td class="qrcodeimg_container">
 						<span class="qrcode_img"></span>
 					</td>
-					<td>
+					<td class="total_td_block">
 						<div class="count_totals_container">
 							<span><?php primer_sum_unit_title(); ?></span> <span class="count_total_prods"></span>
 						</div>
@@ -619,7 +629,7 @@ do_action( 'primer_before_receipt_display' ); ?>
 			</p>
 		</div>
 
-		<p class="union_doc_sign skin">ΕΝΙΑΙΟ ΜΗΧΑΝΟΓΡΑΦΙΚΟ ΕΝΤΥΠΟ ΠΟΛΛΑΠΛΩΝ ΧΡΗΣΕΩΝ</p>
+
 	</div>
 
 </div>

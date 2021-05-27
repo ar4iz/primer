@@ -123,6 +123,8 @@ class Primer {
 		require_once PRIMER_PATH . 'includes/class-primer-settings.php';
 		require_once PRIMER_PATH . 'includes/vendor/cmb2/init.php';
 
+		require_once PRIMER_PATH . 'includes/vendor/dompdf/autoload.inc.php';
+
 		require_once PRIMER_PATH . 'includes/template-tags/primer-tags-receipt.php';
 
 		require_once PRIMER_PATH . 'includes/template-tags/primer-tags-display-modules.php';

@@ -434,7 +434,11 @@ function primer_display_issuer_order_total_price() {
 }
 
 function primer_display_issuer_logo() {
-	echo primer_get_mydata_logo() ? '<img class="logo_img" src="'.esc_url( primer_get_mydata_logo() ).'">' : '';
+	if (!empty(primer_get_mydata_logo())) {
+		echo primer_get_mydata_logo() ? '<img class="logo_img" src="'.esc_url( primer_get_mydata_logo() ).'">' : '';
+	} else {
+		echo '';
+	}
 }
 
 function primer_get_mydata_logo() {

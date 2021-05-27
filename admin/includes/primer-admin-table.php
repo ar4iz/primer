@@ -5,6 +5,9 @@ if ( ! class_exists( 'WP_List_Table' ) ) {
 
 require_once PRIMER_PATH . 'views/get_order_list.php';
 
+// reference the Dompdf namespace
+use Dompdf\Dompdf;
+
 
 class PrimerReceipts extends WP_List_Table {
 
@@ -14,7 +17,7 @@ class PrimerReceipts extends WP_List_Table {
 			array(
 				'singular' => __( 'Order', 'primer' ),
 				'plural' => __( 'Orders', 'primer' ),
-				'ajax' => false,
+				'ajax' => true,
 			)
 		);
 
@@ -179,7 +182,7 @@ class PrimerReceipts extends WP_List_Table {
 
 		</div>
 		<?php
-		 $orders_dates = $primer_orders->get_dates_from_orders();
+		$orders_dates = $primer_orders->get_dates_from_orders();
 		 $min_order_date = min($orders_dates);
 		 $max_order_date = max($orders_dates);
 		 $formatted_min_order_date = date('m/d/Y', $min_order_date);
@@ -190,6 +193,11 @@ class PrimerReceipts extends WP_List_Table {
 
 			    $.fn.selectpicker.Constructor.BootstrapVersion = '4';
 			    $('.selectpicker').selectpicker();
+
+			    $('#primer_order_client').selectWoo({
+					allowClear:  true,
+					placeholder: $( this ).data( 'placeholder' )
+				});
 
 			    var select_year = $('select[name="primer_order_year"]').val();
 
@@ -278,7 +286,7 @@ class PrimerReceipts extends WP_List_Table {
 
 		$get_total_orders = new PrimerOrderList();
 
-		if (isset($_GET['primer_order_status']) || isset($_GET['primer_order_client']) || isset($_GET['order_date_from']) || isset($_GET['order_date_to'])|| isset($_GET['primer_receipt_status'])) {
+		if ((isset($_GET['primer_order_status']) && !empty($_GET['primer_order_status'])) || (isset($_GET['primer_order_client']) && !empty($_GET['primer_order_client'])) || (isset($_GET['order_date_from']) && !empty($_GET['order_date_from'])) || (isset($_GET['order_date_to']) && !empty($_GET['order_date_to'])) || (isset($_GET['primer_receipt_status']) && !empty($_GET['primer_receipt_status']) )) {
 			$get_orders_list = $get_total_orders->get_with_params($_REQUEST['order_date_from'], $_REQUEST['order_date_to'], $_GET['primer_order_client'], $_REQUEST['primer_order_status'], $_GET['primer_receipt_status']);
 		} else {
 			$get_orders_list = $get_total_orders->get();
@@ -525,6 +533,60 @@ function convert_select_orders() {
 							add_post_meta($post_id, 'receipt_product', $product_name);
 						}
 						$response_data = '<div class="notice notice-success"><p>Orders converted</p></div>';
+
+						$post_url = get_the_permalink($post_id);
+						$homepage = file_get_contents($post_url);
+						// instantiate and use the dompdf class
+						$dompdf = new Dompdf();
+						$options= $dompdf->getOptions();
+						$options->setIsHtml5ParserEnabled(true);
+						$dompdf->setOptions($options);
+
+						$dompdf->loadHtml($homepage);
+
+						// Render the HTML as PDF
+						$dompdf->render();
+
+						$upload_dir = wp_upload_dir()['basedir'];
+
+						if (!file_exists($upload_dir . '/email-invoices')) {
+							mkdir($upload_dir . '/email-invoices');
+						}
+						$post_name = get_the_title($post_id);
+						$post_name = str_replace(' ', '_', $post_name);
+						$post_name = str_replace('#', '', $post_name);
+						$post_name = strtolower($post_name);
+
+						$output = $dompdf->output();
+						file_put_contents($upload_dir . '/email-invoices/'.$post_name.'.pdf', $output);
+
+						$attachments = $upload_dir . '/email-invoices/'.$post_name.'.pdf';
+
+						$user_email = $user->user_email;
+						$primer_smtp_options = get_option('primer_emails');
+
+						$headers = 'From: ' . $primer_smtp_options['from_email_field'] ? $primer_smtp_options['from_email_field'] : 'Primer '. get_bloginfo('admin_email');
+						if (!empty($primer_smtp_options['email_subject'])) {
+							$primer_smtp_subject = $primer_smtp_options['email_subject'];
+						} else {
+							$primer_smtp_subject = __('Test email subject', 'primer');
+						}
+
+						if (!empty($primer_smtp_options['quote_available_content'])) {
+							$primer_smtp_message = $primer_smtp_options['quote_available_content'];
+						} else {
+							$primer_smtp_message = __('Test email message', 'primer');
+						}
+
+						$mailResult = false;
+						$primer_smtp = PrimerSMTP::get_instance();
+
+						$mailResult = wp_mail( $user_email, $primer_smtp_subject, $primer_smtp_message, $headers, $attachments );
+
+						if (!$mailResult) {
+							$response_data = '<div class="notice notice-error"><p>'.__('Email settings are not correct.', 'primer').'</p></div>';
+						}
+
 					}
 				} else {
 					$response_data = '<div class="notice notice-error"><p>'.__('Only euro is accepted.', 'primer').'</p></div>';
@@ -555,226 +617,6 @@ function fetch_primer_script() {
 
 	<script>
         (function ($) {
-
-            list = {
-                /** added method display
-                 * for getting first sets of data
-                 **/
-                display: function () {
-
-                    $.ajax({
-
-						url: ajaxurl,
-						dataType: 'json',
-						data: {
-						    _ajax_order_list_nonce: $('#_ajax_order_list_nonce').val(),
-							action: 'ajax_primer_display'
-						},
-						success: function (response) {
-						    $('#primer_order_table').html(response.display);
-
-						    list.init();
-						},
-						error: function(xhr, status, error) {
-  							var err = eval("(" + xhr.responseText + ")");
-  							console.log(error);
-						}
-					});
-
-				},
-
-				init: function () {
-                    var timer;
-                    var delay = 500;
-
-                    $('.tablenav-pages a').on('click', function (e) {
-                        e.preventDefault();
-                        var query = this.search.substring(1);
-
-                        var data = {
-                            paged: list.__query( query, 'paged' ) || '1',
-						};
-                        list.update(data);
-					});
-
-                    $('select[name="primer_order_year"]').on('change', function () {
-                        var refer = $('input[name="_wp_http_referer"]').val();
-                        refer = refer.substring(refer.indexOf("?") + 1);
-
-                        var query = refer.substring(1);
-
-                        setTimeout(function () {
-                            var data = {
-                            order_date_from: list.__query( query, 'order_date_from' ) || $('input[name="order_date_from"]').val(),
-                            order_date_to: list.__query( query, 'order_date_to' ) || $('input[name="order_date_to"]').val(),
-                            order_customer: list.__query( query, 'order_customer' ) || $('select[name="primer_order_client"]').val(),
-                            order_status: list.__query( query, 'order_status' ) || $('select[name="primer_order_status[]"]').val(),
-                            order_receipt_status: list.__query( query, 'order_receipt_status' ) || $('select#primer_receipt_status').val(),
-						};
-                        list.update(data);
-                        }, 500)
-
-                    });
-
-
-                    $('input[name="order_date_from"]').on('change', function () {
-                        var refer = $('input[name="_wp_http_referer"]').val();
-                        refer = refer.substring(refer.indexOf("?") + 1);
-
-                        var query = refer.substring(1);
-
-                         var data = {
-                            order_date_from: list.__query( query, 'order_date_from' ) || $(this).val(),
-                            order_date_to: list.__query( query, 'order_date_to' ) || $('input[name="order_date_to"]').val(),
-                            order_customer: list.__query( query, 'order_customer' ) || $('select[name="primer_order_client"]').val(),
-                            order_status: list.__query( query, 'order_status' ) || $('select[name="primer_order_status[]"]').val(),
-                            order_receipt_status: list.__query( query, 'order_receipt_status' ) || $('select#primer_receipt_status').val(),
-						};
-                        list.update(data);
-                    });
-
-                    $('input[name="order_date_to"]').on('change', function () {
-                        var refer = $('input[name="_wp_http_referer"]').val();
-                        refer = refer.substring(refer.indexOf("?") + 1);
-
-                        var query = refer.substring(1);
-
-                         var data = {
-                            order_date_from: list.__query( query, 'order_date_from' ) || $('input[name="order_date_from"]').val(),
-                            order_date_to: list.__query( query, 'order_date_to' ) || $(this).val(),
-                            order_customer: list.__query( query, 'order_customer' ) || $('select[name="primer_order_client"]').val(),
-                            order_status: list.__query( query, 'order_status' ) || $('select[name="primer_order_status[]"]').val(),
-                            order_receipt_status: list.__query( query, 'order_receipt_status' ) || $('select#primer_receipt_status').val(),
-						};
-                        list.update(data);
-
-                    });
-
-                    $('select[name="primer_order_client"]').on('change', function () {
-                        var refer = $('input[name="_wp_http_referer"]').val();
-                        refer = refer.substring(refer.indexOf("?") + 1);
-
-                        var query = refer.substring(1);
-
-                         var data = {
-                            order_date_from: list.__query( query, 'order_date_from' ) || $('input[name="order_date_from"]').val(),
-                            order_date_to: list.__query( query, 'order_date_to' ) || $('input[name="order_date_to"]').val(),
-                            order_customer: list.__query( query, 'order_customer' ) || $(this).val(),
-                            order_status: list.__query( query, 'order_status' ) || $('select[name="primer_order_status[]"]').val(),
-                            order_receipt_status: list.__query( query, 'order_receipt_status' ) || $('select#primer_receipt_status').val(),
-						};
-                        list.update(data);
-                    });
-
-                     $('select[name="primer_order_status[]"]').on('change', function () {
-                        var refer = $('input[name="_wp_http_referer"]').val();
-                        refer = refer.substring(refer.indexOf("?") + 1);
-
-                        var query = refer.substring(1);
-
-                         var data = {
-                            order_date_from: list.__query( query, 'order_date_from' ) || $('input[name="order_date_from"]').val(),
-                            order_date_to: list.__query( query, 'order_date_to' ) || $('input[name="order_date_to"]').val(),
-                            order_customer: list.__query( query, 'order_customer' ) || $('select[name="primer_order_client"]').val(),
-                            order_status: list.__query( query, 'order_status' ) || $(this).val(),
-                            order_receipt_status: list.__query( query, 'order_receipt_status' ) || $('select#primer_receipt_status').val(),
-						};
-                        list.update(data);
-                    });
-
-                     $('select#primer_receipt_status').on('change', function () {
-                         var refer = $('input[name="_wp_http_referer"]').val();
-                        refer = refer.substring(refer.indexOf("?") + 1);
-
-                        var query = refer.substring(1);
-                        var data = {
-                            order_date_from: list.__query( query, 'order_date_from' ) || $('input[name="order_date_from"]').val(),
-                            order_date_to: list.__query( query, 'order_date_to' ) || $('input[name="order_date_to"]').val(),
-                            order_customer: list.__query( query, 'order_customer' ) || $('select[name="primer_order_client"]').val(),
-                            order_status: list.__query( query, 'order_status' ) || ($('select[name="primer_order_status[]"]').val().length ? $('select[name="primer_order_status[]"]').val() : ''),
-                            order_receipt_status: list.__query( query, 'order_receipt_status' ) || $(this).val(),
-						};
-                        list.update(data);
-                     });
-
-                    $('input[name=paged]').on('keyup', function (e) {
-
-                        if (13 == e.which)
-                            e.preventDefault();
-
-                        var data = {
-                            paged: parseInt($('input[name=paged]').val()) || '1',
-						};
-
-                        window.clearTimeout(timer);
-                        timer = window.setTimeout(function () {
-                            list.update(data);
-						}, delay)
-					});
-
-				},
-
-                /** AJAX call
-                 *
-                 * Send the call and replace table parts with updated version!
-                 *
-                 * @param    object    data The data to pass through AJAX
-                 */
-				update: function (data) {
-
-				    $.ajax({
-
-						url: ajaxurl,
-						data: $.extend(
-							{
-								_ajax_order_list_nonce: $('#_ajax_order_list_nonce').val(),
-								action: '_ajax_fetch_primer_order',
-							},
-							data
-						),
-						success: function (response) {
-
-						    var response = $.parseJSON(response);
-
-						    if (response.rows.length)
-						        $('#the-list').html(response.rows);
-                            if (response.column_headers.length)
-                                $('thead tr, tfoot tr').html(response.column_headers);
-                            if (response.pagination.bottom.length)
-                                $('.tablenav.top .tablenav-pages').html($(response.pagination.top).html());
-                            if (response.pagination.top.length)
-                                $('.tablenav.bottom .tablenav-pages').html($(response.pagination.bottom).html());
-
-                            list.init();
-                        }
-					});
-				},
-
-                /**
-                 * Filter the URL Query to extract variables
-                 *
-                 * @see http://css-tricks.com/snippets/javascript/get-url-variables/
-                 *
-                 * @param    string    query The URL query part containing the variables
-                 * @param    string    variable Name of the variable we want to get
-                 *
-                 * @return   string|boolean The variable value if available, false else.
-                 */
-                __query: function (query, variable) {
-
-                    var vars = query.split("&");
-                    for (var i = 0; i < vars.length; i++) {
-                        var pair = vars[i].split("=");
-                        if (pair[0] == variable)
-                            return pair[1];
-					}
-                    return false;
-				},
-			}
-
-			list.display();
-
-
             function check_exist_receipts(orders) {
                 var order_arr = new Array();
                 $(orders).each(function (i, el) {
@@ -793,8 +635,7 @@ function fetch_primer_script() {
                 })
             }
 
-
-            $('#tables-filter').on('submit', function (e) {
+            $('.submit_convert_orders').on('click', function (e) {
                 e.preventDefault();
 
                 check_exist_receipts($('input[name="orders[]"]:checked'));
@@ -802,8 +643,8 @@ function fetch_primer_script() {
                 var receipt_word = count_orders == 1 ? 'receipt' : 'receipts';
                 var confirmation = confirm('You are about to issue '+count_orders + ' ' + receipt_word+ '. Are you sure?');
 
-                if (confirmation == true) {
-                    var data = $(this).serialize();
+                if (confirmation == true && count_orders > 0) {
+                    var data = $('#tables-filter').serialize();
 
                 $.ajax({
                 	url: ajaxurl,
@@ -820,12 +661,10 @@ function fetch_primer_script() {
                 } else {
                     return false;
                 }
-
-
             })
 
 		})(jQuery)
 	</script>
 <?php }
 
-//add_action('admin_footer', 'fetch_primer_script');
+add_action('admin_footer', 'fetch_primer_script');

@@ -9,10 +9,10 @@ class Primer_SMTP_Utils {
 
 	public function __construct() {
 		require_once 'Cryptor.php';
-		$key = get_option( 'primer_smtp_enc_key', false );
+		$key = get_option( 'primer_enc_key', false );
 		if ( empty( $key ) ) {
 			$key = wp_salt();
-			update_option( 'primer_smtp_enc_key', $key );
+			update_option( 'primer_enc_key', $key );
 		}
 		$this->enc_key = $key;
 	}

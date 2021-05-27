@@ -421,38 +421,80 @@ class Primer_Options {
 					'desc'		=> __( '', 'primer' ),
 					'default'	=> __( '', 'primer' ),
 					'type'	=> 'text_email',
-					'id'	=> 'send_from',
+					'id'	=> 'primer_from_email',
 				),
+
+				array(
+					'name'		=> __( 'Send email to account', 'primer' ),
+					'desc'		=> __( '', 'primer' ),
+					'default'	=> __( '', 'primer' ),
+					'type'	=> 'text_email',
+					'id'	=> 'primer_to_email',
+				),
+
 				array(
 					'name'      => __( 'Email username', 'primer' ),
 					'desc'      => __( '', 'primer' ),
 					'default'   => '',
 					'type'      => 'text',
-					'id'        => 'name',
+					'id'        => 'primer_smtp_username',
 				),
 				array(
 					'name'      => __( 'Email password', 'primer' ),
 					'desc'      => __( '', 'primer' ),
 					'default'   => '',
 					'type'      => 'text',
-					'id'        => 'password',
+					'id'        => 'primer_smtp_password',
 					'attributes' => array(
 						'type' => 'password',
 					),
 				),
+
+				array(
+					'name'		=> __( 'Encrypt Password', 'primer' ),
+					'desc'      => __( '', 'primer' ),
+					'id'		=> 'primer_encrypt_pass',
+					'type'		=> 'checkbox'
+				),
+
+				array(
+					'name'		=> __( 'Type of Encryption', 'primer' ),
+					'desc'      => __( 'For most servers SSL/TLS is the recommended option', 'primer' ),
+					'id'		=> 'primer_smtp_type_encryption',
+					'type'    	=> 'radio_inline',
+					'options'	=> array(
+						'none' => __( 'None', 'primer' ),
+						'ssl' => __( ' SSL/TLS', 'primer' ),
+						'tls' => __( ' STARTTLS', 'primer' ),
+					),
+					'default'	=> 'none'
+				),
+
+				array(
+					'name'		=> __( 'SMTP Authentication', 'primer' ),
+					'desc'		=> __("This options should always be checked 'Yes'", 'primer'),
+					'id'		=> 'primer_smtp_authentication',
+					'type'		=> 'radio_inline',
+					'options'	=> array(
+						'yes'	=> __('Yes', 'primer'),
+						'no'	=> __('No', 'primer'),
+					),
+					'default'	=> 'no'
+				),
+
 				array(
 					'name'      => __( 'SMTP server', 'primer' ),
 					'desc'      => __( '', 'primer' ),
-					'default'   => '',
+					'default'   => 'smtp.example.com',
 					'type'      => 'text',
-					'id'        => 'smtp_server',
+					'id'        => 'primer_smtp_host',
 				),
 				array(
 					'name'      => __( 'Port', 'primer' ),
 					'desc'      => __( '', 'primer' ),
-					'default'   => '',
+					'default'   => '25',
 					'type'      => 'text',
-					'id'        => 'port',
+					'id'        => 'primer_smtp_port',
 					'after_row'		=> '<button type="button" name="primer_smtp_form_submit" class="button badge-danger send_tested_email">'.__('Test Email settings', 'primer').'</button>',
 				),
 
@@ -816,7 +858,6 @@ class Primer_Options {
 
 				$src = $this->get_site_data_by_url($main_url);
 
-
 				file_put_contents($upload_dir . '/exported_html_files/tmp_files/'.$post_name.'.html', $src);
 			}
 
@@ -1017,33 +1058,43 @@ class Primer_Options {
 //		if ( isset( $_POST['primer_smtp_form_submit'] ) ) {
 			/* Update settings */
 
-			if( isset( $_POST['send_from'] ) ) {
-				if ( is_email($_POST['send_from'] ) ) {
-					$primer_smtp_options['send_from'] = sanitize_email( $_POST['send_from'] );
+			if( isset( $_POST['primer_from_email'] ) ) {
+				if ( is_email($_POST['primer_from_email'] ) ) {
+					$primer_smtp_options['from_email_field'] = sanitize_email( $_POST['primer_from_email'] );
 				} else {
 					$error .= ' ' . __( "Please enter a valid email address in the 'Send email from account' field.", 'primer' );
 				}
 			}
 
-			$primer_smtp_options['reply_to_email'] = sanitize_email( 'test@example.com' );
+//			$primer_smtp_options['reply_to_email'] = sanitize_email( 'test@example.com' );
 
-			$primer_smtp_options['smtp_server']            = stripslashes( $_POST['smtp_server'] );
+			$primer_smtp_options['smtp_settings']['smtp_server']            = stripslashes( $_POST['primer_smtp_host'] );
+			$primer_smtp_options['smtp_settings']['type_encryption'] = ( isset( $_POST['primer_smtp_type_encryption'] ) ) ? sanitize_text_field( $_POST['primer_smtp_type_encryption'] ) : 'none';
+			$primer_smtp_options['smtp_settings']['authentication'] = ( isset( $_POST['primer_smtp_authentication'] ) ) ? sanitize_text_field( $_POST['primer_smtp_authentication'] ) : 'yes';
+			$primer_smtp_options['smtp_settings']['username'] = stripslashes( $_POST['primer_smtp_username'] );
 
-		$primer_smtp_options['name'] = stripslashes( $_POST['name'] );
+			$primer_smtp_options['smtp_settings']['encrypt_pass'] = isset( $_POST['primer_encrypt_pass'] ) ? 1 : false;
 
-		$primer_smtp_password = $_POST['password'];
-		if ($primer_smtp_password !== $gag_password) {
-			$primer_smtp_options['password'] = $primer_smtp->encrypt_password( $primer_smtp_password );
-		}
+			$primer_smtp_password = $_POST['primer_smtp_password'];
+			if ($primer_smtp_password !== $gag_password) {
+				$primer_smtp_options['smtp_settings']['password'] = $primer_smtp->encrypt_password( $primer_smtp_password );
+			}
+
+			if ( $primer_smtp_options['smtp_settings']['encrypt_pass'] && ! get_option( 'primer_pass_encrypted', false ) ) {
+				update_option( 'primer_emails', $primer_smtp_options );
+				$pass = $primer_smtp->get_password();
+				$primer_smtp_options['smtp_settings']['password'] = $primer_smtp->encrypt_password( $pass );
+				update_option('primer_emails', $primer_smtp_options);
+			}
 
 
 			/* Check value from "SMTP port" option */
-			if ( isset( $_POST['port'] ) ) {
-				if ( empty( $_POST['port'] ) || 1 > intval( $_POST['port'] ) || ( ! preg_match( '/^\d+$/', $_POST['port'] ) ) ) {
-					$primer_smtp_options['port'] = '25';
+			if ( isset( $_POST['primer_smtp_port'] ) ) {
+				if ( empty( $_POST['primer_smtp_port'] ) || 1 > intval( $_POST['primer_smtp_port'] ) || ( ! preg_match( '/^\d+$/', $_POST['primer_smtp_port'] ) ) ) {
+					$primer_smtp_options['smtp_settings']['port'] = '25';
 					$error .= ' ' . __( "Please enter a valid port in the 'SMTP Port' field.", 'primer' );
 				} else {
-					$primer_smtp_options['port'] = sanitize_text_field( $_POST['port'] );
+					$primer_smtp_options['smtp_settings']['port'] = sanitize_text_field( $_POST['primer_smtp_port'] );
 				}
 			}
 
@@ -1059,8 +1110,8 @@ class Primer_Options {
 			/* Send test letter */
 			$primer_smtp_to = '';
 //			if ( isset( $_POST['primer_smtp_form_submit'] ) ) {
-				if ( isset($_POST['send_from']) ) {
-					$to_email = sanitize_text_field( $_POST['send_from'] );
+				if ( isset($_POST['primer_from_email']) ) {
+					$to_email = sanitize_text_field( $_POST['primer_to_email'] );
 					if (is_email( $to_email )) {
 						$primer_smtp_to = $to_email;
 					} else {
@@ -1084,6 +1135,18 @@ class Primer_Options {
 				$smtp_test_mail['primer_smtp_subject'] = $primer_smtp_subject;
 				$smtp_test_mail['primer_smtp_message'] = $primer_smtp_message;
 				update_option( 'primer_smtp_test_mail', $smtp_test_mail );
+
+
+				if(!empty($error)) {
+					$error_arr = explode('.', $error);
+					foreach ($error_arr as $e) {
+						if ($e) {
+							echo '<div class="notice notice-error is-dismissible"><p><strong>';
+							echo $e;
+							echo '</strong></p></div>';
+						}
+					}
+				}
 
 				if ( !empty( $primer_smtp_to ) ) {
 					$test_res = $primer_smtp->test_mail($primer_smtp_to, $primer_smtp_subject, $primer_smtp_message);

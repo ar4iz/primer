@@ -288,6 +288,7 @@ class PrimerReceipt extends WP_List_Table {
                                                     $('.loadingio-spinner-spinner-chyosfc7wi6').show();
 												},
 												success: function (r) {
+                                                    console.log(r);
                                                     if(r.success == 'true' && r.response !== false ) {
                                                        setTimeout(function () {
                                                            setTimeout(function () {

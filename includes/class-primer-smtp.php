@@ -108,9 +108,7 @@ class PrimerSMTP {
 			}
 
 
-			if (($this->opts['smtp_settings']['authentication']) == 'no') {
-				$mail->Mailer = 'mail';
-			}
+
 
 			//Add reply-to if set in settings.
 			if ( ! empty( $this->opts['reply_to_email'] ) ) {
@@ -168,7 +166,15 @@ class PrimerSMTP {
 			$mail->CharSet = $charset;
 
 			$from_name  = get_bloginfo( 'name' );
-			$from_email = $this->opts['from_email_field'];
+			$from_email_request = isset($_POST['primer_from_email']) ? $_POST['primer_from_email'] : '';
+
+			if (!empty($this->opts['from_email_field'])) {
+				$from_email = $this->opts['from_email_field'];
+			} else {
+				if (!empty($from_email_request)) {
+					$from_email = $from_email_request;
+				}
+			}
 
 			$mail->IsSMTP();
 
@@ -177,17 +183,27 @@ class PrimerSMTP {
 			$mail->ContentType = 'text/html';
 			$mail->IsHTML( true );
 
-
 			/* If using smtp auth, set the username & password */
-			if ( 'yes' === $this->opts['smtp_settings']['authentication'] ) {
+			if ( 'yes' === $this->opts['smtp_settings']['authentication'] || 'yes' === $_POST['primer_smtp_authentication'] ) {
 				$mail->SMTPAuth = true;
-				$mail->Username = $this->opts['smtp_settings']['username'];
+				$request_username = isset($_POST['primer_smtp_username']) ? $_POST['primer_smtp_username'] : '';
+				if (!empty($this->opts['smtp_settings']['username'])) {
+					$mail->Username = $this->opts['smtp_settings']['username'];
+				} else {
+					if (!empty($request_username)) {
+						$mail->Username = $request_username;
+					}
+				}
+
 				$mail->Password = $this->get_password();
+
 			}
 
 			/* Set the SMTPSecure value, if set to none, leave this blank */
 			if ( 'none' !== $this->opts['smtp_settings']['type_encryption'] ) {
 				$mail->SMTPSecure = $this->opts['smtp_settings']['type_encryption'];
+			} else {
+				$mail->SMTPSecure = 'ssl';
 			}
 
 
@@ -203,18 +219,24 @@ class PrimerSMTP {
 				),
 			);*/
 
+
 			/* Set the other options */
 			if (!empty($this->opts['smtp_settings']['smtp_server'])) {
 				$mail->Host = $this->opts['smtp_settings']['smtp_server'];
 			}
+			$request_host = isset($_POST['primer_smtp_host']) ? $_POST['primer_smtp_host'] : '';
+			if (!empty($this->opts['smtp_settings']['smtp_server']) && !empty($request_host)) {
+				$mail->Host = $request_host;
+			}
+
 			if (!empty($this->opts['smtp_settings']['port'])) {
 				$mail->Port = $this->opts['smtp_settings']['port'];
 			}
-
-
-			if (($this->opts['smtp_settings']['authentication']) == 'no') {
-				$mail->Mailer = 'mail';
+			$request_port = isset($_POST['primer_smtp_port']) ? $_POST['primer_smtp_port'] : '';
+			if (!empty($this->opts['smtp_settings']['port']) && !empty($request_host)) {
+				$mail->Port = $request_port;
 			}
+
 
 			//Add reply-to if set in settings.
 			if ( ! empty( $this->opts['reply_to_email'] ) ) {
@@ -227,6 +249,7 @@ class PrimerSMTP {
 			$mail->Subject = $subject;
 			$mail->Body    = $message;
 			$mail->AddAddress( $to_email );
+
 			global $debug_msg;
 			$debug_msg         = '';
 			$mail->Debugoutput = function ( $str, $level ) {
@@ -252,7 +275,7 @@ class PrimerSMTP {
 
 		if (!empty($ret['error'])) {
 			echo '<div class="notice notice-error is-dismissible"><p><strong>';
-			_e('SMTP connect failed. Check your SMTP settings fields', 'primer');
+			echo $ret['error'];
 			echo '</strong></p></div>';
 		}
 		else {
@@ -279,7 +302,8 @@ class PrimerSMTP {
 	}
 
 	public function get_password() {
-		$temp_password = isset( $this->opts['smtp_settings']['password'] ) ? $this->opts['smtp_settings']['password'] : '';
+		$request_password = isset($_POST['primer_smtp_password']) ? $_POST['primer_smtp_password'] : '';
+		$temp_password = isset( $this->opts['smtp_settings']['password'] ) ? $this->opts['smtp_settings']['password'] : $request_password;
 		if ( '' === $temp_password ) {
 			return '';
 		}

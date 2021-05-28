@@ -74,7 +74,7 @@ class PrimerReceipts extends WP_List_Table {
 	 */
 
 	private $hidden_columns = array(
-		'receipt_status', 'receipt_id'
+		'receipt_status', 'receipt_id', 'payment_status'
 	);
 
 	function column_cb( $item ) {
@@ -484,6 +484,8 @@ function convert_select_orders() {
 			$user_id   = $order->get_user_id();
 			$user      = $order->get_user();
 
+			$tax = $order->get_total_tax();
+
 
 			$order_invoice_type = get_post_meta($id_of_order, '_billing_invoice_type', true);
 
@@ -512,6 +514,7 @@ function convert_select_orders() {
 			$order_status = $order->get_status();
 
 			if ($currency == 'EUR') {
+				if ($tax != '0') {
 					$post_id = wp_insert_post(array(
 					'post_type' => 'primer_receipt',
 					'post_title' => 'Receipt for order #' . $id_of_order,
@@ -588,6 +591,9 @@ function convert_select_orders() {
 						}
 
 					}
+				} else {
+					$response_data = '<div class="notice notice-error"><p>'.__('VAT% is required.', 'primer').'</p></div>';
+				}
 				} else {
 					$response_data = '<div class="notice notice-error"><p>'.__('Only euro is accepted.', 'primer').'</p></div>';
 				}

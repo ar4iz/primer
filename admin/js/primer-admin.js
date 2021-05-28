@@ -69,22 +69,24 @@
 		$(document).on('submit', '#email-test-form', function (e) {
 			e.preventDefault();
 
-			var confirm_send = confirm('If you fill some fields, please press Save button before testing');
-
-			if (confirm_send) {
-				var data = $('#email-test-form').serialize();
-				$.ajax({
-					url: ajaxurl,
-					data: data,
-					method: "POST",
-					success: function (data) {
-						if (data) {
-							$('#wpbody-content .nav-tab-wrapper').prepend(data);
-						}
-					},
-					error: function(xhr, status, error) {}
-				})
-			}
+			var data = $('#email-test-form').serialize();
+			$.ajax({
+				url: ajaxurl,
+				data: data,
+				method: "POST",
+				success: function (data) {
+					if (data) {
+						$('#wpbody-content .nav-tab-wrapper').prepend(data);
+					}
+				},
+				error: function(xhr, status, error) {
+					console.log(error)
+					$('#email-test-form').remove();
+				},
+				complete: function () {
+					$('#email-test-form').remove();
+				}
+			})
 		})
 
 		$(".button.save_order").on('click', function (e) {

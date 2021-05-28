@@ -425,14 +425,6 @@ class Primer_Options {
 				),
 
 				array(
-					'name'		=> __( 'Send email to account', 'primer' ),
-					'desc'		=> __( '', 'primer' ),
-					'default'	=> __( '', 'primer' ),
-					'type'	=> 'text_email',
-					'id'	=> 'primer_to_email',
-				),
-
-				array(
 					'name'      => __( 'Email username', 'primer' ),
 					'desc'      => __( '', 'primer' ),
 					'default'   => '',
@@ -928,6 +920,9 @@ class Primer_Options {
 
 	public function create_primer_the_zip_file(){
 		$receipt_id = isset($_POST['page_id']) ? $_POST['page_id'] : "";
+		$post_ids = '';
+
+		$receipt_id_arr = explode(', ', $receipt_id);
 
 		global $wpdb;
 
@@ -943,7 +938,7 @@ class Primer_Options {
 		$all_files = $upload_dir . '/exported_html_files/tmp_files';
 		$files = $this->get_all_files_as_array($all_files);
 
-		$zip_file_name = $upload_dir . '/exported_html_files/receipts-html.zip';
+		$zip_file_name = $upload_dir . '/exported_html_files/'.$post_name.'-html.zip';
 
 		ob_start();
 		echo $this->create_zip($files, $zip_file_name, $all_files . '/');
@@ -953,7 +948,7 @@ class Primer_Options {
 			$this->rmdir_recursive($upload_dir . '/exported_html_files/tmp_files');
 		}
 
-		$response = ($create_zip == 'created') ? $upload_url . '/receipts'.$post_name.'-html.zip' : false;
+		$response = ($create_zip == 'created') ? $upload_url . '/'.$post_name.'-html.zip' : false;
 
 
 		echo json_encode(array('success' => 'true', 'status' => 'success', 'response' => $response));
@@ -1066,7 +1061,7 @@ class Primer_Options {
 				}
 			}
 
-//			$primer_smtp_options['reply_to_email'] = sanitize_email( 'test@example.com' );
+			$primer_smtp_options['reply_to_email'] = sanitize_email( get_bloginfo('admin_email') );
 
 			$primer_smtp_options['smtp_settings']['smtp_server']            = stripslashes( $_POST['primer_smtp_host'] );
 			$primer_smtp_options['smtp_settings']['type_encryption'] = ( isset( $_POST['primer_smtp_type_encryption'] ) ) ? sanitize_text_field( $_POST['primer_smtp_type_encryption'] ) : 'none';
@@ -1111,7 +1106,7 @@ class Primer_Options {
 			$primer_smtp_to = '';
 //			if ( isset( $_POST['primer_smtp_form_submit'] ) ) {
 				if ( isset($_POST['primer_from_email']) ) {
-					$to_email = sanitize_text_field( $_POST['primer_to_email'] );
+					$to_email = sanitize_text_field( $_POST['primer_from_email'] );
 					if (is_email( $to_email )) {
 						$primer_smtp_to = $to_email;
 					} else {

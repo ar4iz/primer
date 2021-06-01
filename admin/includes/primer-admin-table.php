@@ -176,15 +176,22 @@ class PrimerReceipts extends WP_List_Table {
 							?>
 							</select>
 					</div>
+
+					<div class="apply_btn"><input type="submit" class="button" name="filter_action" value="<?php _e('Apply filter', 'primer'); ?>" /></div>
 				</div>
-				<div><input type="submit" class="button" name="filter_action" value="<?php _e('Filter', 'primer'); ?>" /></div>
 			</div>
 
 		</div>
 		<?php
 		$orders_dates = $primer_orders->get_dates_from_orders();
-		 $min_order_date = min($orders_dates);
-		 $max_order_date = max($orders_dates);
+		if (!empty($orders_dates) && is_array($orders_dates)) {
+		    $min_order_date = min($orders_dates);
+		    $max_order_date = max($orders_dates);
+		} else {
+		    $min_order_date = date('m/d/Y');
+		    $max_order_date = date('m/d/Y');
+		}
+
 		 $formatted_min_order_date = date('m/d/Y', $min_order_date);
 		 $formatted_max_order_date = date('m/d/Y', $max_order_date);
 		 ?>
@@ -206,8 +213,7 @@ class PrimerReceipts extends WP_List_Table {
                 var min_order_date = "<?php echo $formatted_min_order_date; ?>";
                 var max_order_date = "<?php echo $formatted_max_order_date; ?>";
 
-                $('input[name="order_date_from"]').datepicker("option", "minDate", new Date(min_order_date));
-                $('input[name="order_date_to"]').datepicker("option", "minDate", new Date(max_order_date));
+
                 var date_from = $('input[name="order_date_from"]'),
                     date_to = $('input[name="order_date_to"]');
                 $('input[name="order_date_from"], input[name="order_date_to"]').datepicker({
@@ -216,6 +222,20 @@ class PrimerReceipts extends WP_List_Table {
                     dateFormat: "yy-mm-dd",
                     yearRange: "2021:2035",
                 });
+
+
+
+                <?php if (isset($_GET['order_date_from'])) { ?>
+                    $('input[name="order_date_from"]').datepicker("setDate", new Date("<?php echo $_GET['order_date_from']; ?>"));
+					<?php } else { ?>
+                	$('input[name="order_date_from"]').datepicker("option", "minDate", new Date(min_order_date));
+					<?php } ?>
+
+					<?php if (isset($_GET['order_date_to']) && !empty($_GET['order_date_to'])) { ?>
+                    $('input[name="order_date_to"]').datepicker("setDate", new Date("<?php echo $_GET['order_date_to']; ?>"));
+	                <?php } else { ?>
+						$('input[name="order_date_to"]').datepicker("option", "minDate", new Date(max_order_date));
+	                <?php } ?>
 
 
                 $('select[name="primer_order_year"]').on('change', function () {
@@ -286,7 +306,7 @@ class PrimerReceipts extends WP_List_Table {
 
 		$get_total_orders = new PrimerOrderList();
 
-		if ((isset($_GET['primer_order_status']) && !empty($_GET['primer_order_status'])) || (isset($_GET['primer_order_client']) && !empty($_GET['primer_order_client'])) || (isset($_GET['order_date_from']) && !empty($_GET['order_date_from'])) || (isset($_GET['order_date_to']) && !empty($_GET['order_date_to'])) || (isset($_GET['primer_receipt_status']) && !empty($_GET['primer_receipt_status']) )) {
+		if ((isset($_GET['primer_order_status'])) || (isset($_GET['primer_order_client']) && !empty($_GET['primer_order_client'])) || (isset($_GET['order_date_from']) && !empty($_GET['order_date_from'])) || (isset($_GET['order_date_to']) && !empty($_GET['order_date_to'])) || (isset($_GET['primer_receipt_status']) && !empty($_GET['primer_receipt_status']) )) {
 			$get_orders_list = $get_total_orders->get_with_params($_REQUEST['order_date_from'], $_REQUEST['order_date_to'], $_GET['primer_order_client'], $_REQUEST['primer_order_status'], $_GET['primer_receipt_status']);
 		} else {
 			$get_orders_list = $get_total_orders->get();

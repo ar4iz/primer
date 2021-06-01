@@ -6,6 +6,9 @@
 		<?php $this->display(); ?>
 	</div>
 	<div class="submit convert_orders convert_receipts">
+        <div class="send_receipts_wrap">
+            <button type="button" class="resend_receipt_to_customer button button-secondary" disabled><?php _e('Send to customer', 'primer'); ?></button>
+        </div>
 		<a href="" class="button download-btn hide" download><?php _e('Download selected receipts', 'export-wp-page-to-static-html'); ?></a>
 
 		<input type="submit" class="button" id="zip_load" value="<?php _e('Download selected receipts', 'primer'); ?>" disabled>

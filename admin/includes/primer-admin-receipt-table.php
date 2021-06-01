@@ -134,8 +134,9 @@ class PrimerReceipt extends WP_List_Table {
 							</select>
 						</div>
 
+                        <div class="apply_btn"><input type="submit" class="button" name="filter_action" value="<?php _e('Apply filter', 'primer'); ?>" /></div>
 					</div>
-					<div><input type="submit" class="button" name="filter_action" value="<?php _e('Filter', 'primer'); ?>" /></div>
+
 				</div>
 			</div>
 
@@ -217,6 +218,7 @@ class PrimerReceipt extends WP_List_Table {
                     var atLeastOneIsChecked = $('input[name="receipts[]"]:checked').length > 0;
                     if (atLeastOneIsChecked) {
                         $('.convert_receipts input[type="submit"]').removeAttr('disabled');
+                        $('.resend_receipt_to_customer').removeAttr('disabled');
                     }
                     function checker() {
                         var length_inputs = $('input[name="receipts[]"]').length;
@@ -225,11 +227,13 @@ class PrimerReceipt extends WP_List_Table {
 
                             if ($(el).prop('checked') == true || $(el).is(':checked') == true) {
                                 $('.convert_receipts input[type="submit"]').removeAttr('disabled');
+                                $('.resend_receipt_to_customer').removeAttr('disabled');
                                 trues.push($(el));
                             }
                         })
                         if (trues.length <= 0) {
                             $('.convert_receipts input[type="submit"]').attr('disabled', true);
+                            $('.resend_receipt_to_customer').attr('disabled', true);
                         }
                     }
 
@@ -237,17 +241,68 @@ class PrimerReceipt extends WP_List_Table {
                         checker();
                         if ($(this).is(':checked')) {
                             $('.convert_receipts input[type="submit"]').removeAttr('disabled');
+                            $('.resend_receipt_to_customer').removeAttr('disabled');
                         } else {
                             $('.convert_receipts input[type="submit"]').attr('disabled', true);
+                            $('.resend_receipt_to_customer').attr('disabled', true);
                         }
                     });
                     $('.wp-list-table input[name="receipts[]"]').on('click', function () {
                         checker();
                     });
 
+                    function popupOpenClose(popup) {
+                        if ($('.popup_wrapper').length == 0) {
+                            $(popup).wrapInner("<div class='popup_wrapper'></div>")
+                        }
+                        $(popup).show();
+
+                        $(popup).click(function (e) {
+                            if (e.target == this) {
+                                if ($(popup).is(':visible')) {
+                                    $(popup).hide();
+								}
+							}
+						})
+
+                    }
+
+                    $('#tables-receipt-filter .resend_receipt_to_customer').on('click', function (e) {
+                        e.preventDefault();
+                        $('.resend_receipt_to_customer').attr('disabled', true);
+                        var checked_receipts_data = $('#tables-receipt-filter input[name="receipts[]"]').serialize();
+
+                        $.ajax({
+                            url: primer.ajax_url,
+                            data: 'action=primer_resend_receipt_to_customer&'+checked_receipts_data,
+                            type: 'post',
+                            dataType: 'json',
+                            beforeSend: function(){
+                                $('table.table-view-list.receipts').css({'opacity': '0.5'});
+                                $('.loadingio-spinner-spinner-chyosfc7wi6').show();
+                            },
+                            success: function (response) {
+                                if (response.success == 'true' && response.response !== false) {
+                                    // console.log(response.response_wrap);
+                                    setTimeout(function () {
+                                        $('.loadingio-spinner-spinner-chyosfc7wi6').hide();
+                                        $('table.table-view-list.receipts').css({'opacity': '1'});
+                                        $('table.table-view-list.receipts').append(response.response_wrap);
+                                        popupOpenClose('.primer_popup');
+									}, 1000);
+                                    setTimeout(function () {
+                                        document.location.reload();
+									}, 1700)
+								}
+                            }
+                        })
+
+                    })
+
 
                     $('#tables-receipt-filter #zip_load').on('click', function (e) {
                         e.preventDefault();
+                        $('#tables-receipt-filter #zip_load').attr('disabled', true);
                         dataObj = new Array();
                         var dat = $('#tables-receipt-filter').serializeArray();
                         $(dat).each(function (i, el) {
@@ -288,7 +343,6 @@ class PrimerReceipt extends WP_List_Table {
                                                     $('.loadingio-spinner-spinner-chyosfc7wi6').show();
 												},
 												success: function (r) {
-                                                    console.log(r);
                                                     if(r.success == 'true' && r.response !== false ) {
                                                        setTimeout(function () {
                                                            setTimeout(function () {

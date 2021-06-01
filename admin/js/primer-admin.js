@@ -66,6 +66,22 @@
 			return true;
 		});*/
 
+		function popupOpenClose(popup) {
+			if ($('.popup_wrapper').length == 0) {
+				$(popup).wrapInner("<div class='popup_wrapper'></div>")
+			}
+			$(popup).show();
+
+			$(popup).click(function (e) {
+				if (e.target == this) {
+					if ($(popup).is(':visible')) {
+						$(popup).hide();
+					}
+				}
+			})
+
+		}
+
 		$(document).on('submit', '#email-test-form', function (e) {
 			e.preventDefault();
 
@@ -76,7 +92,8 @@
 				method: "POST",
 				success: function (data) {
 					if (data) {
-						$('#wpbody-content .nav-tab-wrapper').prepend(data);
+						$('#primer_emails').append(data);
+						popupOpenClose('.primer_popup');
 					}
 				},
 				error: function(xhr, status, error) {

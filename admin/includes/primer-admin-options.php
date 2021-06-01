@@ -7,6 +7,9 @@ require_once PRIMER_PATH . 'admin/includes/primer-admin-table.php';
 
 require_once PRIMER_PATH . 'includes/class-primer-smtp.php';
 
+// reference the Dompdf namespace
+use Dompdf\Dompdf;
+
 class Primer_Options {
 
 	/**
@@ -48,6 +51,7 @@ class Primer_Options {
 		add_action('wp_print_scripts', array(&$this, 'data_include_script'));
 		add_action('wp_ajax_create_primer_the_zip_file', array(&$this, 'create_primer_the_zip_file'));
 		add_action('wp_ajax_primer_export_receipt_to_html', array(&$this, 'primer_export_receipt_to_html'));
+		add_action('wp_ajax_primer_resend_receipt_to_customer', array(&$this, 'primer_resend_receipt_to_customer'));
 
 		add_action('wp_ajax_primer_smtp_settings', array(&$this, 'primer_smtp_settings'));
 
@@ -800,6 +804,93 @@ class Primer_Options {
 		$primer_receipt->handle_main_primer_receipt_admin_menu();
 	}
 
+	public function primer_resend_receipt_to_customer() {
+		$receipt_ids = isset($_POST["receipts"]) ? $_POST["receipts"] : "";
+
+		$response = '';
+
+		if (!empty($receipt_ids) && is_array($receipt_ids)) {
+			foreach ( $receipt_ids as $receipt_id ) {
+                $receipt_id = (int)$receipt_id;
+
+                $order_id = get_post_meta($receipt_id, 'order_id_to_receipt', true);
+                $user_id = get_post_meta($receipt_id, 'receipt_client_id', true);
+
+                $user_data = get_user_by('ID', $user_id);
+
+                $user_email = $user_data->user_email;
+                $user_email = sanitize_email($user_email);
+
+				$upload_dir = wp_upload_dir()['basedir'];
+
+				if (!file_exists($upload_dir . '/email-invoices')) {
+					mkdir($upload_dir . '/email-invoices');
+				}
+
+				$post_name = get_the_title($receipt_id);
+				$post_name = str_replace(' ', '_', $post_name);
+				$post_name = str_replace('#', '', $post_name);
+				$post_name = strtolower($post_name);
+
+				$attachments = $upload_dir . '/email-invoices/'.$post_name.'.pdf';
+
+				if (!file_exists($attachments)) {
+					$post_url = get_the_permalink($receipt_id);
+
+					$homepage = file_get_contents($post_url);
+
+					$dompdf = new Dompdf();
+					$options= $dompdf->getOptions();
+					$options->setIsHtml5ParserEnabled(true);
+					$dompdf->setOptions($options);
+
+					$dompdf->loadHtml($homepage);
+
+					$dompdf->render();
+
+					$output = $dompdf->output();
+					file_put_contents($upload_dir . '/email-invoices/'.$post_name.'.pdf', $output);
+
+					$attachments = $upload_dir . '/email-invoices/'.$post_name.'.pdf';
+				}
+
+				$primer_smtp_options = get_option('primer_emails');
+
+				$headers = 'From: ' . $primer_smtp_options['from_email_field'] ? $primer_smtp_options['from_email_field'] : 'Primer '. get_bloginfo('admin_email');
+				if (!empty($primer_smtp_options['email_subject'])) {
+					$primer_smtp_subject = $primer_smtp_options['email_subject'];
+				} else {
+					$primer_smtp_subject = __('Test email subject', 'primer');
+				}
+
+				if (!empty($primer_smtp_options['quote_available_content'])) {
+					$primer_smtp_message = $primer_smtp_options['quote_available_content'];
+				} else {
+					$primer_smtp_message = __('Test email message', 'primer');
+				}
+
+				$mailResult = false;
+				$primer_smtp = PrimerSMTP::get_instance();
+
+				$mailResult = wp_mail( $user_email, $primer_smtp_subject, $primer_smtp_message, $headers, $attachments );
+
+				if (!$mailResult) {
+//					$response =  '<div class="notice notice-error"><p>'.__('Email settings are not correct.', 'primer').'</p></div>';
+					$response = false;
+					$response_wrap = '';
+
+				} else {
+					$response = 'success';
+					$response_wrap = '<div class="primer_popup popup_success"><h3>'.__('Message sent successfully!', 'primer').'</h3></div>';
+				}
+				echo json_encode(array('success' => 'true', 'status' => 'success', 'response' => $response, 'response_wrap' => $response_wrap));
+
+			}
+		}
+
+		wp_die();
+    }
+
 	public function primer_export_receipt_to_html() {
 		$receipt_ids = isset($_POST['page_id']) ? $_POST['page_id'] : "";
 
@@ -1136,9 +1227,8 @@ class Primer_Options {
 					$error_arr = explode('.', $error);
 					foreach ($error_arr as $e) {
 						if ($e) {
-							echo '<div class="notice notice-error is-dismissible"><p><strong>';
-							echo $e;
-							echo '</strong></p></div>';
+							$response_wrap = '<div class="primer_popup popup_error"><h3>'.$e.'</h3></div>';
+							echo $response_wrap;
 						}
 					}
 				}

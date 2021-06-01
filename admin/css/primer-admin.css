@@ -17,6 +17,9 @@
     align-items: baseline;
     margin-bottom: 10px;
 }
+.apply_btn {
+    text-align: right;
+}
 .filter_blocks_wrapper .select2-container--default .select2-selection--single {
     border: 1px solid rgb(140, 143, 148);
     border-radius: 3px;
@@ -58,6 +61,12 @@
 #primer_order_table .filter_blocks_wrapper .right_wrap {
     max-width: 380px;
     width: 100%;
+}
+#primer_order_table .apply_btn {
+    margin-right: 25px;
+}
+#primer_receipt_table .apply_btn {
+    margin-right: 6px;
 }
 
 .tablenav .left_wrap .filter_block label[for=order_date_to] {
@@ -164,6 +173,41 @@
 #primer_conditions_repeat .inside.cmb-td.cmb-nested.cmb-field-list .cmb-row {
     display: flex;
     flex-wrap: wrap;
+}
+
+.send_receipts_wrap {
+    margin-right: 30px;
+}
+
+.primer_popup {
+    background: rgba(100, 100, 100, 0.5);
+    position: fixed;
+    display: none;
+    z-index: 5000;
+    height: 100%;
+    width: 100%;
+    left: 0;
+    top: 0;
+}
+.primer_popup > div {
+    max-width: 600px;
+    width: 70%;
+    position: fixed;
+    transform: translate(-50%, -50%);
+    left: 50%;
+    top: 50%;
+    background: #FFFFFF;
+    padding: 30px;
+    z-index: 5001;
+    text-align: center;
+    border-radius: 10px;
+    box-shadow: 0px 0px 15px 0px rgba(0, 0, 0, 0.4);
+}
+.primer_popup.popup_error > div {
+    border: 5px solid #d63638;
+}
+.primer_popup.popup_success > div {
+    border: 5px solid #00a32a;
 }
 
 

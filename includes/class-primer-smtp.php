@@ -34,111 +34,151 @@ class PrimerSMTP {
 
 	public function wp_mail_failed( $wp_error ) {
 		if ( ! empty( $wp_error->errors ) && ! empty( $wp_error->errors['wp_mail_failed'] ) && is_array( $wp_error->errors['wp_mail_failed'] ) ) {
-			echo '<div class="notice notice-error is-dismissible"><p><strong>';
+			echo '<div class="primer_popup popup_error"><h3>';
 			echo '*** ' . implode( ' | ', $wp_error->errors['wp_mail_failed'] ) . " ***\r\n";
-			echo '</strong></p></div>';
+			echo '</h3></div>';
 		}
 	}
 
 	public function init_smtp( &$phpmailer ) {
 		//check if SMTP credentials have been configured.
 		if ( ! $this->credentials_configured() ) {
-			return false;
+			return;
 		}
 
-		global $wp_version;
+		/* Set the mailer type as per config above, this overrides the already called isMail method */
+		$phpmailer->IsSMTP();
 
-		if ( version_compare( $wp_version, '5.4.99' ) > 0 ) {
-			require_once ABSPATH . WPINC . '/PHPMailer/PHPMailer.php';
-			require_once ABSPATH . WPINC . '/PHPMailer/SMTP.php';
-			require_once ABSPATH . WPINC . '/PHPMailer/Exception.php';
-			$mail = new PHPMailer( true );
-		} else {
-			require_once ABSPATH . WPINC . '/class-phpmailer.php';
-			$mail = new \PHPMailer( true );
+		$from_email = $this->opts['from_email_field'];
+		$from_name  = get_bloginfo( 'name' );
+		$phpmailer->SetFrom( $phpmailer->From, $phpmailer->FromName );
+
+		if ( 'none' !== $this->opts['smtp_settings']['type_encryption'] ) {
+			$phpmailer->SMTPSecure = $this->opts['smtp_settings']['type_encryption'];
 		}
 
-		try {
-
-			$charset       = get_bloginfo( 'charset' );
-			$mail->CharSet = $charset;
-
-			$from_name  = get_bloginfo( 'name' );
-			$from_email = $this->opts['from_email_field'];
-
-			$mail->IsSMTP();
+		/* Set the other options */
+		$phpmailer->Host = $this->opts['smtp_settings']['smtp_server'];
+		$phpmailer->Port = $this->opts['smtp_settings']['port'];
 
 
-			// send plain text test email
-			$mail->ContentType = 'text/html';
-			$mail->IsHTML( true );
-
-
-			/* If using smtp auth, set the username & password */
-			if ( 'yes' === $this->opts['smtp_settings']['authentication'] ) {
-				$mail->SMTPAuth = true;
-				$mail->Username = $this->opts['smtp_settings']['username'];
-				$mail->Password = $this->get_password();
-			}
-
-			/* Set the SMTPSecure value, if set to none, leave this blank */
-			if ( 'none' !== $this->opts['smtp_settings']['type_encryption'] ) {
-				$mail->SMTPSecure = $this->opts['smtp_settings']['type_encryption'];
-			}
-
-
-			/* PHPMailer 5.2.10 introduced this option. However, this might cause issues if the server is advertising TLS with an invalid certificate. */
-			$mail->SMTPAutoTLS = true;
-
-			// Insecure SSL option enabled
-			/*$mail->SMTPOptions = array(
-				'ssl' => array(
-					'verify_peer'       => false,
-					'verify_peer_name'  => false,
-					'allow_self_signed' => true,
-				),
-			);*/
-
-			/* Set the other options */
-			if (!empty($this->opts['smtp_settings']['smtp_server'])) {
-				$mail->Host = $this->opts['smtp_settings']['smtp_server'];
-			}
-			if (!empty($this->opts['smtp_settings']['port'])) {
-				$mail->Port = $this->opts['smtp_settings']['port'];
-			}
-
-
-
-
-			//Add reply-to if set in settings.
-			if ( ! empty( $this->opts['reply_to_email'] ) ) {
-				$mail->AddReplyTo( $this->opts['reply_to_email'], $from_name );
-			}
-
-			$mail->SetFrom( $from_email, $from_name );
-			//This should set Return-Path header for servers that are not properly handling it, but needs testing first
-			//$mail->Sender		 = $mail->From;
-			global $debug_msg;
-			$debug_msg         = '';
-			$mail->Debugoutput = function ( $str, $level ) {
-				global $debug_msg;
-				$debug_msg .= $str;
-			};
-			$mail->SMTPDebug   = 1;
-			//set reasonable timeout
-			$mail->Timeout = 10;
-
-			/* Send mail and return result */
-			$mail->Send();
-			$mail->ClearAddresses();
-			$mail->ClearAllRecipients();
-
-
-		} catch ( \Exception $e ) {
-			$ret['error'] = $mail->ErrorInfo;
-		} catch ( \Throwable $e ) {
-			$ret['error'] = $mail->ErrorInfo;
+		/* If we're using smtp auth, set the username & password */
+		if ( 'yes' === $this->opts['smtp_settings']['authentication'] ) {
+			$phpmailer->SMTPAuth = true;
+			$phpmailer->Username = $this->opts['smtp_settings']['username'];
+			$phpmailer->Password = $this->get_password();
 		}
+		//PHPMailer 5.2.10 introduced this option. However, this might cause issues if the server is advertising TLS with an invalid certificate.
+		$phpmailer->SMTPAutoTLS = false;
+
+		//set reasonable timeout
+		$phpmailer->Timeout = 10;
+
+//		global $wp_version;
+//
+//		if ( version_compare( $wp_version, '5.4.99' ) > 0 ) {
+//			require_once ABSPATH . WPINC . '/PHPMailer/PHPMailer.php';
+//			require_once ABSPATH . WPINC . '/PHPMailer/SMTP.php';
+//			require_once ABSPATH . WPINC . '/PHPMailer/Exception.php';
+//			$mail = new PHPMailer( true );
+//		} else {
+//			require_once ABSPATH . WPINC . '/class-phpmailer.php';
+//			$mail = new \PHPMailer( true );
+//		}
+//
+//		try {
+//
+//			$charset       = get_bloginfo( 'charset' );
+//			$mail->CharSet = $charset;
+//
+//			$from_name  = get_bloginfo( 'name' );
+//			$from_email = $this->opts['from_email_field'];
+//
+//			$mail->IsSMTP();
+//
+//
+//			// send plain text test email
+//			$mail->ContentType = 'text/html';
+//			$mail->IsHTML( true );
+//			$mail->Body    = __('Receipt from site', 'primer');
+//
+//
+//			/* If using smtp auth, set the username & password */
+//			if ( 'yes' === $this->opts['smtp_settings']['authentication'] ) {
+//				$mail->SMTPAuth = true;
+//				$mail->Username = $this->opts['smtp_settings']['username'];
+//				$mail->Password = $this->get_password();
+//			}
+//
+//			/* Set the SMTPSecure value, if set to none, leave this blank */
+//			if ( 'none' !== $this->opts['smtp_settings']['type_encryption'] ) {
+//				$mail->SMTPSecure = $this->opts['smtp_settings']['type_encryption'];
+//			}
+//
+//
+//			/* PHPMailer 5.2.10 introduced this option. However, this might cause issues if the server is advertising TLS with an invalid certificate. */
+//			$mail->SMTPAutoTLS = true;
+//
+//			// Insecure SSL option enabled
+//			/*$mail->SMTPOptions = array(
+//				'ssl' => array(
+//					'verify_peer'       => false,
+//					'verify_peer_name'  => false,
+//					'allow_self_signed' => true,
+//				),
+//			);*/
+//
+//			/* Set the other options */
+//			if (!empty($this->opts['smtp_settings']['smtp_server'])) {
+//				$mail->Host = $this->opts['smtp_settings']['smtp_server'];
+//			}
+//			if (!empty($this->opts['smtp_settings']['port'])) {
+//				$mail->Port = $this->opts['smtp_settings']['port'];
+//			}
+//
+//
+//
+//
+//			//Add reply-to if set in settings.
+//			if ( ! empty( $this->opts['reply_to_email'] ) ) {
+//				$mail->AddReplyTo( $this->opts['reply_to_email'], $from_name );
+//			}
+//
+//			$mail->SetFrom( $from_email, $from_name );
+//			//This should set Return-Path header for servers that are not properly handling it, but needs testing first
+//
+//			//$mail->Sender		 = $mail->From;
+//			global $debug_msg;
+//			$debug_msg         = '';
+//			$mail->Debugoutput = function ( $str, $level ) {
+//				global $debug_msg;
+//				$debug_msg .= $str;
+//			};
+//			$mail->SMTPDebug   = 1;
+//			//set reasonable timeout
+//			$mail->Timeout = 10;
+//
+//			/* Send mail and return result */
+//			$mail->Send();
+//			$mail->ClearAddresses();
+//			$mail->ClearAllRecipients();
+//
+//
+//		} catch ( \Exception $e ) {
+//			$ret['error'] = $mail->ErrorInfo;
+//		} catch ( \Throwable $e ) {
+//			$ret['error'] = $mail->ErrorInfo;
+//		}
+//
+//		if (!empty($ret['error'])) {
+//			echo '<div class="primer_popup popup_error"><h3>';
+//			echo $ret['error'];
+//			echo '</h3></div>';
+//		} else {
+//			echo '<div class="primer_popup popup_success"><h3>';
+//			_e('Test email sent successfully', 'primer');
+//			echo '</h3></div>';
+//		}
 
 	}
 
@@ -274,14 +314,14 @@ class PrimerSMTP {
 		$ret['debug_log'] = $debug_msg;
 
 		if (!empty($ret['error'])) {
-			echo '<div class="notice notice-error is-dismissible"><p><strong>';
+			echo '<div class="primer_popup popup_error"><h3>';
 			echo $ret['error'];
-			echo '</strong></p></div>';
+			echo '</h3></div>';
 		}
 		else {
-			echo '<div class="notice notice-success is-dismissible"><p><strong>';
+			echo '<div class="primer_popup popup_success"><h3>';
 			_e('Test email sent successfully', 'primer');
-			echo '</strong></p></div>';
+			echo '</h3></div>';
 		}
 
 		return $ret;

@@ -524,6 +524,18 @@ class Primer_Options {
 						'quicktags' => true
 					),
 				),
+
+				array(
+					'name'		=> __('Send email automatically on order conversion', 'primer'),
+					'desc'		=> '',
+					'default'	=> 'yes',
+					'id'		=> 'automatically_send_on_conversation',
+					'type'		=> 'radio_inline',
+					'options'	=> array(
+						'yes' => __('Yes', 'primer'),
+						'no' => __('No', 'primer')
+					)
+				)
 			)
 		) );
 

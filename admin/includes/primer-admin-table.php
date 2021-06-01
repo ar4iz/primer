@@ -182,6 +182,8 @@ class PrimerReceipts extends WP_List_Table {
 			</div>
 
 		</div>
+
+		<div class="loadingio-spinner-spinner-chyosfc7wi6"><div class="ldio-drsjmtezgls"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div></div>
 		<?php
 		$orders_dates = $primer_orders->get_dates_from_orders();
 		if (!empty($orders_dates) && is_array($orders_dates)) {
@@ -601,15 +603,24 @@ function convert_select_orders() {
 							$primer_smtp_message = __('Test email message', 'primer');
 						}
 
-						$mailResult = false;
-						$primer_smtp = PrimerSMTP::get_instance();
+						$primer_automatically_send_file = $primer_smtp_options['automatically_send_on_conversation'];
 
-						$mailResult = wp_mail( $user_email, $primer_smtp_subject, $primer_smtp_message, $headers, $attachments );
-
-						if (!$mailResult) {
-							$response_data = '<div class="notice notice-error"><p>'.__('Email settings are not correct.', 'primer').'</p></div>';
+						if (empty($primer_automatically_send_file)) {
+							$primer_automatically_send_file = 'yes';
 						}
 
+						if (!empty($primer_automatically_send_file) && $primer_automatically_send_file === 'yes') {
+
+							$mailResult = false;
+							$primer_smtp = PrimerSMTP::get_instance();
+
+							$mailResult = wp_mail( $user_email, $primer_smtp_subject, $primer_smtp_message, $headers, $attachments );
+
+							if (!$mailResult) {
+								$response_data = '<div class="notice notice-error"><p>'.__('Email settings are not correct.', 'primer').'</p></div>';
+							}
+
+						}
 					}
 				} else {
 					$response_data = '<div class="notice notice-error"><p>'.__('VAT% is required.', 'primer').'</p></div>';
@@ -662,6 +673,7 @@ function fetch_primer_script() {
             }
 
             $('.submit_convert_orders').on('click', function (e) {
+                $('.submit_convert_orders').attr('disabled', true);
                 e.preventDefault();
 
                 check_exist_receipts($('input[name="orders[]"]:checked'));
@@ -675,12 +687,20 @@ function fetch_primer_script() {
                 $.ajax({
                 	url: ajaxurl,
                 	data: data,
+                	beforeSend: function(){
+                                $('table.table-view-list.orders').css({'opacity': '0.5'});
+                                $('.loadingio-spinner-spinner-chyosfc7wi6').show();
+                            },
                 	success: function (data) {
                 	    if (data) {
                 	        $('#wpbody-content').prepend(data);
+                	        setTimeout(function () {
+                                        $('.loadingio-spinner-spinner-chyosfc7wi6').hide();
+                                        $('table.table-view-list.orders').css({'opacity': '1'});
+									}, 1000);
                 	        setTimeout(function (){
                 	            document.location.reload();
-                	        }, 1000);
+                	        }, 1500);
                 	    }
                 	}
                 })

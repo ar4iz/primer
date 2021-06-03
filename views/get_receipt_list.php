@@ -31,6 +31,13 @@ class PrimerReceiptList {
 						$receipt_status_text = 'Not Issued';
 						break;
 				}
+
+				$receipt_in_log = '';
+				$receipt_log_status = get_post_meta(get_the_ID(), 'exist_error_log', true);
+				if (!empty($receipt_log_status)) {
+					$receipt_in_log = __('Log', 'primer');
+				}
+
 				$this->receipt_array[$receipt_count]['receipt_id'] = get_the_ID();
 				$this->receipt_array[$receipt_count]['receipt_date'] = get_the_date();
 				$this->receipt_array[$receipt_count]['receipt_hour'] = get_the_time();
@@ -38,7 +45,7 @@ class PrimerReceiptList {
 				$this->receipt_array[$receipt_count]['receipt_product'] = get_post_meta(get_the_ID(), 'receipt_product', true);
 				$this->receipt_array[$receipt_count]['receipt_price'] = get_post_meta(get_the_ID(), 'receipt_price', true);
 				$this->receipt_array[$receipt_count]['receipt_status'] = $receipt_status_text;
-				$this->receipt_array[$receipt_count]['receipt_error_status'] = '';
+				$this->receipt_array[$receipt_count]['receipt_error_status'] = $receipt_in_log;
 				$receipt_count++;
 			endwhile;
 		endif;

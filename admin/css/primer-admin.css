@@ -210,6 +210,12 @@
     border: 5px solid #00a32a;
 }
 
+#primer_receipt_log_table .tablenav .actions {
+    width: 100%;
+}
+#primer_receipt_log_table .filter_blocks_wrapper {
+    margin-top: 30px;
+}
 
 @keyframes ldio-drsjmtezgls {
     0% { opacity: 1 }

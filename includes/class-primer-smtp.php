@@ -136,9 +136,7 @@ class PrimerSMTP {
 //				$mail->Port = $this->opts['smtp_settings']['port'];
 //			}
 //
-//
-//
-//
+
 //			//Add reply-to if set in settings.
 //			if ( ! empty( $this->opts['reply_to_email'] ) ) {
 //				$mail->AddReplyTo( $this->opts['reply_to_email'], $from_name );
@@ -296,7 +294,7 @@ class PrimerSMTP {
 				global $debug_msg;
 				$debug_msg .= $str;
 			};
-			$mail->SMTPDebug   = 1;
+			$mail->SMTPDebug   = 2;
 			//set reasonable timeout
 			$mail->Timeout = 10;
 

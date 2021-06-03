@@ -45,7 +45,11 @@ class PrimerReceipt extends WP_List_Table {
 	function column_default( $item, $column_name ) {
 //		return $item[ $column_name ];
 
-		echo '<a href="' . esc_url( get_permalink($item['receipt_id']) ) . '" target="_blank" class="order-view"><strong>' . esc_attr( $item[ $column_name ] ) . '</strong></a>';
+		if ($column_name !== 'receipt_error_status') {
+			echo '<a href="' . esc_url( get_permalink($item['receipt_id']) ) . '" target="_blank" class="order-view"><strong>' . esc_attr( $item[ $column_name ] ) . '</strong></a>';
+		} else {
+			echo '<a href="' . admin_url('admin.php?page=primer_receipts_logs') . '" target="_blank" class="order-view"><strong>' . esc_attr( $item[ $column_name ] ) . '</strong></a>';
+		}
 	}
 
 	/**

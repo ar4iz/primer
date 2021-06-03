@@ -183,6 +183,7 @@ class Primer {
 
 		$this->loader->add_action( 'init', $plugin_admin, 'new_taxonomy_receipt_status', 1 );
 		$this->loader->add_action( 'init', $plugin_admin, 'new_cpt_receipt', 1 );
+		$this->loader->add_action( 'init', $plugin_admin, 'new_cpt_receipt_log', 1 );
 		$this->loader->add_action( 'init', $plugin_admin, 'register_new_terms', 1 );
 
 		$this->loader->add_action( 'init', $plugin_admin, 'primer_create_tax_rates', 1 );

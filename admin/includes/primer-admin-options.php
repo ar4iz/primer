@@ -93,6 +93,7 @@ class Primer_Options {
 		add_menu_page(__('Primer Receipts', 'primer'), __('Primer Receipts', 'primer'), 'manage_options', 'wp_ajax_list_order', array(&$this, "admin_page_display"), 'dashicons-printer');
 		add_submenu_page('wp_ajax_list_order', __('Orders', 'primer'), __('Orders', 'primer'), 'manage_options', 'wp_ajax_list_order', array(&$this, "admin_page_display"));
 		add_submenu_page('wp_ajax_list_order', __('Receipts', 'primer'), __('Receipts', 'primer'), 'manage_options', 'primer_receipts', array(&$this, "admin_page_receipt_display"));
+		add_submenu_page(null, __('Receipts Logs', 'primer'), __('Receipts Logs', 'primer'), 'manage_options', 'primer_receipts_logs', array(&$this, "admin_page_receipt_log_display"));
 		add_submenu_page('wp_ajax_list_order', __('Settings', 'primer'), __('Settings', 'primer'), 'manage_options', 'primer_settings', array(&$this, "admin_settings_page_display"));
 
 		add_submenu_page('wp_ajax_list_order', __('Export', 'primer'), __('Export', 'primer'), 'manage_options', 'primer_export', array(&$this, "admin_settings_page_display"));
@@ -816,6 +817,12 @@ class Primer_Options {
 		$primer_receipt->handle_main_primer_receipt_admin_menu();
 	}
 
+	public function admin_page_receipt_log_display() {
+		include_once(PRIMER_PATH . 'admin/includes/primer-admin-receipt-log-table.php');
+		$primer_receipt = new PrimerReceiptLog();
+		$primer_receipt->handle_main_primer_receipt_admin_menu();
+	}
+
 	public function primer_resend_receipt_to_customer() {
 		$receipt_ids = isset($_POST["receipts"]) ? $_POST["receipts"] : "";
 
@@ -889,7 +896,7 @@ class Primer_Options {
 				if (!$mailResult) {
 //					$response =  '<div class="notice notice-error"><p>'.__('Email settings are not correct.', 'primer').'</p></div>';
 					$response = false;
-					$response_wrap = '';
+					$response_wrap = '<div class="primer_popup popup_error"><h3>'.__('Message not sent!', 'primer').'</h3></div>';
 
 				} else {
 					$response = 'success';

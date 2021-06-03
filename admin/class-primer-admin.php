@@ -103,7 +103,7 @@ class Primer_Admin {
 
 		//Bootstrap select
 		$screen = get_current_screen();
-		if ( $screen->id == "toplevel_page_wp_ajax_list_order" || $screen->id == "primer-receipts_page_primer_receipts" ) {
+		if ( $screen->id == "toplevel_page_wp_ajax_list_order" || $screen->id == "primer-receipts_page_primer_receipts" || $screen->id == "admin_page_primer_receipts_logs" ) {
 			wp_register_style('primer-bootstrap-css', PRIMER_URL . '/public/css/bootstrap.min.css', array(), PRIMER_VERSION);
 			wp_enqueue_style('primer-bootstrap-css');
 			wp_register_style('primer-bootstrap-select-css', PRIMER_URL . '/public/css/bootstrap-select.min.css', array(), PRIMER_VERSION);
@@ -326,6 +326,88 @@ class Primer_Admin {
 		$opts = apply_filters('primer_receipt_params', $opts);
 
 		register_post_type('primer_receipt', $opts );
+	}
+
+	/**
+	 * Creates a new custom post type for receipt report
+	 *
+	 * @since 	1.0.0
+	 */
+	public function new_cpt_receipt_log() {
+
+		$translate = get_option( 'primer_translate' );
+
+		$cap_type = 'post';
+		$plural = primer_get_receipt_log_label_plural();
+		$single = primer_get_receipt_log_label();
+		$cpt_name = 'primer_receipt_log';
+
+		$opts['can_export']             = TRUE;
+		$opts['capability_type']        = $cap_type;
+		$opts['description']            = '';
+		$opts['exclude_from_search']    = TRUE;
+		$opts['has_archive']            = FALSE;
+		$opts['hierarchical']           = TRUE;
+		$opts['map_meta_cap']           = TRUE;
+		$opts['menu_icon']              = 'dashicons-text-page';
+		$opts['public']                 = TRUE;
+		$opts['publicly_querable']      = TRUE;
+		$opts['query_var']              = TRUE;
+		$opts['register_meta_box_cb']   = '';
+		$opts['rewrite']                = FALSE;
+		$opts['show_in_admin_bar']      = TRUE;
+		$opts['show_in_menu']           = TRUE;
+		$opts['show_in_nav_menu']       = FALSE;
+		$opts['show_ui']                = TRUE;
+		$opts['supports']			    = array( 'title', 'comments' );
+		$opts['taxonomies']				= array( 'receipt_status' );
+
+		$opts['capabilities']['delete_others_posts']	= "delete_others_{$cap_type}s";
+		$opts['capabilities']['delete_post']			= "delete_{$cap_type}";
+		$opts['capabilities']['delete_posts']			= "delete_{$cap_type}s";
+		$opts['capabilities']['delete_private_posts']	= "delete_private_{$cap_type}s";
+		$opts['capabilities']['delete_published_posts']	= "delete_published_{$cap_type}s";
+		$opts['capabilities']['edit_others_posts']		= "edit_others_{$cap_type}s";
+		$opts['capabilities']['edit_post']				= "edit_{$cap_type}";
+		$opts['capabilities']['edit_posts']				= "edit_{$cap_type}s";
+		$opts['capabilities']['edit_private_posts']		= "edit_private_{$cap_type}s";
+		$opts['capabilities']['edit_published_posts']	= "edit_published_{$cap_type}s";
+		$opts['capabilities']['publish_posts']			= "publish_{$cap_type}s";
+		$opts['capabilities']['read_post']				= "read_{$cap_type}";
+		$opts['capabilities']['read_private_posts']		= "read_private_{$cap_type}s";
+
+		/* translators: %s is a placeholder for the localized word "Receipt" (singular) */
+		$opts['labels']['add_new']						= sprintf( __( 'Add New %s', 'primer' ), $single );
+		/* translators: %s is a placeholder for the localized word "Receipt" (singular) */
+		$opts['labels']['add_new_item']					= sprintf( __( 'Add New %s', 'primer' ), $single );
+		$opts['labels']['all_items']					= $plural;
+		/* translators: %s is a placeholder for the localized word "Receipt" (singular) */
+		$opts['labels']['edit_item']					= sprintf( __( 'Edit %s' , 'primer' ), $single );
+		$opts['labels']['menu_name']					= $plural;
+		$opts['labels']['name']							= $plural;
+		$opts['labels']['name_admin_bar']				= $single;
+		/* translators: %s is a placeholder for the localized word "Receipt" (singular) */
+		$opts['labels']['new_item']						= sprintf( __( 'New %s', 'primer' ), $single );
+		/* translators: %s is a placeholder for the localized word "Receipts" (plural) */
+		$opts['labels']['not_found']					= sprintf( __( 'No %s Found', 'primer' ), $plural );
+		/* translators: %s is a placeholder for the localized word "Receipts" (plural) */
+		$opts['labels']['not_found_in_trash']			= sprintf( __( 'No %s Found in Trash', 'primer' ), $plural );
+		/* translators: %s is a placeholder for the localized word "Receipt" (singular) */
+		$opts['labels']['parent_item_colon']			= sprintf( __( 'Parent %s:', 'primer' ), $single );
+		/* translators: %s is a placeholder for the localized word "Receipts" (plural) */
+		$opts['labels']['search_items']					= sprintf( __( 'Search %s', 'primer' ), $plural );
+		$opts['labels']['singular_name']				= $single;
+		/* translators: %s is a placeholder for the localized word "Receipt" (singular) */
+		$opts['labels']['view_item']					= sprintf( __( 'View %s', 'primer' ), $single );
+
+		$opts['rewrite']['slug']						= FALSE;
+		$opts['rewrite']['with_front']					= FALSE;
+		$opts['rewrite']['feeds']						= FALSE;
+		$opts['rewrite']['pages']						= FALSE;
+
+		$opts = apply_filters('primer_receipt_log_params', $opts);
+
+		register_post_type('primer_receipt_log', $opts );
 	}
 
 	public function primer_create_tax_rates() {

@@ -557,6 +557,7 @@ function convert_select_orders() {
 							$product_name = $item_data->get_name();
 							add_post_meta($post_id, 'receipt_product', $product_name);
 						}
+
 						$response_data = '<div class="notice notice-success"><p>Orders converted</p></div>';
 
 						$post_url = get_the_permalink($post_id);
@@ -611,15 +612,41 @@ function convert_select_orders() {
 
 						if (!empty($primer_automatically_send_file) && $primer_automatically_send_file === 'yes') {
 
+							$receipt_log_id = wp_insert_post(array(
+								'post_type' => 'primer_receipt_log',
+								'post_title' => 'Receipt report for #' . $id_of_order,
+								'comment_status' => 'closed',
+								'ping_status' => 'closed',
+								'post_status' => 'publish',
+							));
+							if ($receipt_log_id) {
+								update_post_meta($receipt_log_id, 'receipt_log_order_id', $id_of_order);
+								update_post_meta($receipt_log_id, 'receipt_log_order_date', $order_paid_date);
+								update_post_meta($receipt_log_id, 'receipt_log_client', $user_data);
+								$get_issue_status = get_post_meta($post_id, 'receipt_status', true);
+								if(empty($get_issue_status)) {
+									$get_issue_status = 'issued';
+								}
+								update_post_meta($receipt_log_id, 'receipt_log_status', $get_issue_status);
+							}
+
 							$mailResult = false;
 							$primer_smtp = PrimerSMTP::get_instance();
 
 							$mailResult = wp_mail( $user_email, $primer_smtp_subject, $primer_smtp_message, $headers, $attachments );
 
 							if (!$mailResult) {
-								$response_data = '<div class="notice notice-error"><p>'.__('Email settings are not correct.', 'primer').'</p></div>';
+								$response_data = '<div class="notice notice-error"><p>'.$GLOBALS['phpmailer']->ErrorInfo.'</p></div>';
+								update_post_meta($receipt_log_id, 'receipt_log_email', 'not_sent');
+								update_post_meta($receipt_log_id, 'receipt_log_email_error', $GLOBALS['phpmailer']->ErrorInfo);
+								update_post_meta($receipt_log_id, 'receipt_log_total_status', 'only_errors');
+							} else {
+								update_post_meta($receipt_log_id, 'receipt_log_email', 'sent');
+								update_post_meta($receipt_log_id, 'receipt_log_total_status', 'only_issued');
 							}
 
+
+							update_post_meta($post_id, 'exist_error_log', 'exist_log');
 						}
 					}
 				} else {
@@ -697,10 +724,10 @@ function fetch_primer_script() {
                 	        setTimeout(function () {
                                         $('.loadingio-spinner-spinner-chyosfc7wi6').hide();
                                         $('table.table-view-list.orders').css({'opacity': '1'});
-									}, 1000);
+									}, 1500);
                 	        setTimeout(function (){
                 	            document.location.reload();
-                	        }, 1500);
+                	        }, 2000);
                 	    }
                 	}
                 })

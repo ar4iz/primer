@@ -44,12 +44,14 @@ class PrimerReceiptLogList {
 
 				$receipt_log_email_error = get_post_meta(get_the_ID(), 'receipt_log_email_error', true);
 
+				$receipt_log_error = get_post_meta(get_the_ID(), 'receipt_log_error', true);
+
 				$this->receipt_log_array[$receipt_log_count]['receipt_log_order_id'] = get_post_meta(get_the_ID(), 'receipt_log_order_id', true);
 				$this->receipt_log_array[$receipt_log_count]['receipt_log_order_date'] = get_post_meta(get_the_ID(), 'receipt_log_order_date', true);
 				$this->receipt_log_array[$receipt_log_count]['receipt_log_client'] = get_post_meta(get_the_ID(), 'receipt_log_client', true);
 				$this->receipt_log_array[$receipt_log_count]['receipt_log_status'] = $receipt_log_status_text;
 				$this->receipt_log_array[$receipt_log_count]['receipt_log_email'] = $receipt_log_email_status_text;
-				$this->receipt_log_array[$receipt_log_count]['receipt_log_error'] = '';
+				$this->receipt_log_array[$receipt_log_count]['receipt_log_error'] = $receipt_log_error;
 				$this->receipt_log_array[$receipt_log_count]['receipt_log_email_error'] = $receipt_log_email_error;
 				$receipt_log_count++;
 			endwhile;

@@ -160,6 +160,8 @@ function primer_display_issuer_product() {
 
 		if ($price_excl_tax == $price_incl_tax) {
 			$percent = (($subtotal_item_tax / $quantity) / $price_excl_tax ) * 100;
+		} else {
+			$percent = (($subtotal_item_tax / $quantity) / $price_excl_tax ) * 100;
 		}
 
 //		$percent = (($total_tax / $quantity) / $price_excl_tax) * 100;
@@ -167,6 +169,7 @@ function primer_display_issuer_product() {
 		$total_order_payment = $item->get_total();
 
 		$total_order_item = $total_order_payment + $subtotal_item_tax;
+
 
 		$issuer_product .= '<td><span class="item_vat">'.$percent.'</span></td>';
 
@@ -523,10 +526,12 @@ function primer_display_left_customer_info() {
 		$profession = get_post_meta($order_id, '_billing_store', true);
 		$vat_number = get_post_meta($order_id, '_billing_vat', true);
 		$doy = get_post_meta($order_id, '_billing_doy', true);
+		$doy_value = primer_return_doy_args()[$doy];
 	} else {
 		$profession = '';
 		$vat_number = '';
 		$doy = '';
+		$doy_value = '';
 	}
 
 	$left_customer_info .= '<tr>';
@@ -553,7 +558,7 @@ function primer_display_left_customer_info() {
 	} else {
 		$left_customer_info .= '<td class="skin bold"><span> DOY</span></td>';
 	}
-	$left_customer_info .= '<td class="info_value"><span>: </span><span class="counterparty_doy">'.$doy.'</span></td>';
+	$left_customer_info .= '<td class="info_value"><span>: </span><span class="counterparty_doy">'.$doy_value.'</span></td>';
 	$left_customer_info .= '</tr>';
 
 	$left_customer_info .= '<tr class="blank_row">';

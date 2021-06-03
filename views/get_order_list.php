@@ -44,6 +44,11 @@ class PrimerOrderList {
 				$user_id   = $order->get_user_id();
 				$user      = $order->get_user();
 
+				$user_first_name = $order->get_billing_first_name();
+				$user_last_name = $order->get_billing_last_name();
+
+				$user_full_name = $user_first_name . ' ' . $user_last_name;
+
 				$currency      = $order->get_currency();
 				$currency_symbol = get_woocommerce_currency_symbol( $currency );
 				$payment_method = $order->get_payment_method();
@@ -66,7 +71,7 @@ class PrimerOrderList {
 				$this->orders_array[$order_count]['order_id'] = $id_of_order;
 				$this->orders_array[$order_count]['order_date'] = $order_paid_date;
 				$this->orders_array[$order_count]['order_hour'] = $order_paid_hour;
-				$this->orders_array[$order_count]['order_client'] = $user ? $user->display_name : '';
+				$this->orders_array[$order_count]['order_client'] = $user ? $user->display_name : $user_full_name;
 				$this->orders_array[$order_count]['order_product'] = $product_name;
 				$this->orders_array[$order_count]['order_price'] = $order_total_price . ' ' .$currency_symbol;
 				$this->orders_array[$order_count]['order_status'] = $order_status;
@@ -255,6 +260,11 @@ class PrimerOrderList {
 				$user_id   = $order->get_user_id();
 				$user      = $order->get_user();
 
+				$user_first_name = $order->get_billing_first_name();
+				$user_last_name = $order->get_billing_last_name();
+
+				$user_full_name = $user_first_name . ' ' . $user_last_name;
+
 				$currency      = $order->get_currency();
 				$currency_symbol = get_woocommerce_currency_symbol( $currency );
 				$payment_method = $order->get_payment_method();
@@ -277,7 +287,7 @@ class PrimerOrderList {
 				$this->orders_array[$order_count]['order_id'] = $id_of_order;
 				$this->orders_array[$order_count]['order_date'] = $order_paid_date;
 				$this->orders_array[$order_count]['order_hour'] = $order_paid_hour;
-				$this->orders_array[$order_count]['order_client'] = $user ? $user->display_name : '';
+				$this->orders_array[$order_count]['order_client'] = $user ? $user->display_name : $user_full_name;
 				$this->orders_array[$order_count]['order_product'] = $product_name;
 				$this->orders_array[$order_count]['order_price'] = $order_total_price . ' ' .$currency_symbol;
 				$this->orders_array[$order_count]['order_status'] = $order_status;

@@ -56,6 +56,7 @@
 			$('#test-email-form-submit').trigger('click');
 		}
 		$('.send_tested_email').on('click', function () {
+			$('.send_tested_email').attr('disabled', true);
 			var sibling_divs = $(this).prevAll($('.cmb-row.cmb-type-text'));
 			var email_fields = sibling_divs.find('input');
 			create_form(email_fields);
@@ -76,6 +77,7 @@
 				if (e.target == this) {
 					if ($(popup).is(':visible')) {
 						$(popup).hide();
+						$(popup).remove();
 					}
 				}
 			})
@@ -94,6 +96,7 @@
 					if (data) {
 						$('#primer_emails').append(data);
 						popupOpenClose('.primer_popup');
+						$('.send_tested_email').removeAttr('disabled');
 					}
 				},
 				error: function(xhr, status, error) {
@@ -225,7 +228,7 @@
 			}
 
 
-			if (save_btn_val == 'Create') {
+			if (save_btn_val == 'Create' || save_btn_val == 'Update') {
 				if (confirm_text != '') {
 					confirmation = confirm(confirm_text + ' are required fields! Do you want to continue?');
 				} else {

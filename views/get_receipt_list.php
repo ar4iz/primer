@@ -84,10 +84,27 @@ class PrimerReceiptList {
 				$receipt_query->the_post();
 
 				$user_display_name = get_post_meta(get_the_ID(), 'receipt_client_id', true);
+
+				$order_id = get_post_meta(get_the_ID(), 'order_id_to_receipt', true);
+				$order = wc_get_order( $order_id );
+				$order_user_first_name = $order->get_billing_first_name();
+				$order_user_last_name = $order->get_billing_last_name();
+
+
+				$customer_full_name = get_post_meta(get_the_ID(), 'receipt_client', true);
+				if (empty($customer_full_name)) {
+					$customer_full_name = $order_user_first_name . ' ' . $order_user_last_name;
+				}
+
 				$user_data = get_user_by('ID', $user_display_name);
 
-				$this->receipt_customers[$receipt_count]['receipt_client'] = get_post_meta(get_the_ID(), 'receipt_client', true);
-				$this->receipt_customers[$receipt_count]['receipt_client_id'] = $user_data->ID;
+				$user_id = get_post_meta(get_the_ID(), 'receipt_client_id', true);
+				if (empty($user_id)) {
+					$user_id = 0;
+				}
+
+				$this->receipt_customers[$receipt_count]['receipt_client'] = $customer_full_name;
+				$this->receipt_customers[$receipt_count]['receipt_client_id'] = $user_id;
 				$receipt_count++;
 			endwhile;
 		endif;

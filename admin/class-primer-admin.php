@@ -618,6 +618,10 @@ class Primer_Admin {
 					'description' => ''
 				);
 			}
+			$billing_fields['billing']['fields']['billing_doy_name'] = array(
+				'label' => 'DOY Name',
+				'description' => ''
+			);
 		}
 		return $billing_fields;
 	}
@@ -670,6 +674,22 @@ class Primer_Admin {
 		$replace['{billing_store}'] = !empty($args['billing_store']) ? $data['store'] .': '. $args['billing_store'] : '';
 
 		return $replace;
+	}
+
+	public function primer_checkout_save_user_meta( $order_id ) {
+		$order = wc_get_order( $order_id );
+		$user_id = $order->get_user_id();
+		if ( $order->get_billing_first_name() ) {
+			update_user_meta( $user_id, 'first_name', $order->get_billing_first_name() );
+		}
+		if ( $order->get_billing_last_name() ) {
+			update_user_meta( $user_id, 'last_name', $order->get_billing_last_name() );
+		}
+		$doy = get_post_meta($order_id, '_billing_doy', true);
+		$doy_value = primer_return_doy_args()[$doy];
+		if (!empty($doy_value)) {
+			update_user_meta( $user_id, 'billing_doy_name', $doy_value );
+		}
 	}
 
 

@@ -459,9 +459,16 @@ do_action( 'primer_before_receipt_display' ); ?>
             margin-bottom: 4px;
         }
 
+        .count_totals_container > span {
+			vertical-align: middle;
+            line-height: 18px;
+		}
+
         .count_total_prods {
             font-size: 16px;
             font-weight: bold;
+			vertical-align: middle;
+			float: right;
         }
 
         .cont_sign_left {
@@ -606,7 +613,7 @@ do_action( 'primer_before_receipt_display' ); ?>
 					</td>
 					<td class="total_td_block">
 						<div class="count_totals_container">
-							<span><?php primer_sum_unit_title(); ?></span> <span class="count_total_prods"></span>
+							<span><?php primer_sum_unit_title(); ?></span> <span class="count_total_prods"><?php primer_sum_unit_count(); ?></span>
 						</div>
 						<div class="total_container">
 

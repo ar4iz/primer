@@ -534,7 +534,7 @@ function convert_select_orders() {
 				$invoice_term = 'english_invoice';
 			}
 
-			$user_data = $user ? $user->display_name : $user_full_name;
+			$user_data = $user ? $user_full_name : $user->display_name;
 
 			$user_order_email = $order->get_billing_email();
 
@@ -604,7 +604,7 @@ function convert_select_orders() {
 
 					$attachments = $upload_dir . '/email-invoices/'.$post_name.'.pdf';
 
-					$user_email = $user ? $user->user_email : $user_order_email;
+					$user_email = $user ? $user_order_email : $user->user_email;
 
 					$primer_smtp_options = get_option('primer_emails');
 
@@ -658,7 +658,7 @@ function convert_select_orders() {
 						$mailResult = false;
 						$primer_smtp = PrimerSMTP::get_instance();
 
-						$mailResult = wp_mail( $user_email, $primer_smtp_subject, $primer_smtp_message, $headers, $attachments );
+						$mailResult = wp_mail( $user_order_email, $primer_smtp_subject, $primer_smtp_message, $headers, $attachments );
 
 						if (!$mailResult) {
 							$response_data = '<div class="notice notice-error"><p>'.$GLOBALS['phpmailer']->ErrorInfo.'</p></div>';

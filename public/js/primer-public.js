@@ -63,7 +63,6 @@
 			checkInvoiceFieldsVisibility($(this).val())
 		})
 
-		console.log($invoice_type.val());
 		checkInvoiceFieldsVisibility($invoice_type.val());
 
 		function my_callback() {
@@ -71,6 +70,11 @@
 		}
 
 		$('#billing_doy').selectWoo();
+
+		$(window).bind('beforeunload', function(){
+			my_callback()
+			jQuery('#billing_invoice_type_receipt').prop('checked', true);
+		});
 	})
 
 })( jQuery );

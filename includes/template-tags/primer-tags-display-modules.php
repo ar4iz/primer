@@ -9,18 +9,21 @@ function primer_display_issuer_container() {
 
 	$issuer_client_id = get_post_meta($receipt_id, 'receipt_client_id', true);
 
-	$customer = new WC_Customer( $issuer_client_id );
+	$order_id = get_post_meta($receipt_id, 'order_id_to_receipt', true);
+	$order = wc_get_order( $order_id );
 
-	$billing_first_name = $customer->get_billing_first_name();
-	$billing_last_name = $customer->get_billing_last_name();
+	$billing_first_name = $order->get_billing_first_name();
+	$billing_last_name = $order->get_billing_last_name();
 
-	$customer_full_name = $billing_first_name . ' ' . $billing_last_name;
-	if (empty($customer_full_name)) {
+	if (!empty($issuer_name)) {
 		$customer_full_name = $issuer_name;
+	} else {
+		$customer_full_name = $billing_first_name . ' ' . $billing_last_name;
 	}
 
-	$billing_address_1  = $customer->get_billing_address_1();
-	$billing_address_2  = $customer->get_billing_address_2();
+
+	$billing_address_1  = $order->get_billing_address_1();
+	$billing_address_2  = $order->get_billing_address_2();
 
 	$issuer_container .= '<span class="issuer_name skin">'.__('ISSUER\'S COMPANY NAME').'</span>';
 
@@ -44,8 +47,13 @@ function primer_main_info_table_head() {
 
 	$issuer_client_id = get_post_meta($receipt_id, 'receipt_client_id', true);
 
-	$customer = new WC_Customer( $issuer_client_id );
-	$customer_country = $customer->get_country();
+
+	$order_id = get_post_meta($receipt_id, 'order_id_to_receipt', true);
+	$order = wc_get_order( $order_id );
+
+	$order_customer_country = $order->get_billing_country();
+
+	$customer_country = $order_customer_country;
 
 	$issuer_main_info_table_head = '<tr class="heading">';
 
@@ -73,8 +81,14 @@ function primer_display_issuer_product_head() {
 	$receipt_id = get_the_ID();
 	$issuer_client_id = get_post_meta($receipt_id, 'receipt_client_id', true);
 
-	$customer = new WC_Customer( $issuer_client_id );
-	$customer_country = $customer->get_country();
+	$order_id = get_post_meta($receipt_id, 'order_id_to_receipt', true);
+
+	$order = wc_get_order( $order_id );
+
+	$order_customer_country = $order->get_billing_country();
+
+	$customer_country = $order_customer_country;
+
 
 	$issuer_product_head = '<tr class="heading">';
 	if ($customer_country == 'GR') {
@@ -192,10 +206,11 @@ function primer_display_issuer_comments() {
 
 	$issuer_client_id = get_post_meta($receipt_id, 'receipt_client_id', true);
 
-	$customer = new WC_Customer( $issuer_client_id );
-	$customer_country = $customer->get_country();
-
 	$order = wc_get_order( $order_id );
+
+	$order_customer_country = $order->get_billing_country();
+
+	$customer_country = $order_customer_country;
 
 	$order_comment = $order->get_customer_note();
 	$order_comment_all = $order->get_customer_order_notes();
@@ -223,8 +238,12 @@ function primer_sign_issuer_title() {
 	$receipt_id = get_the_ID();
 	$issuer_client_id = get_post_meta($receipt_id, 'receipt_client_id', true);
 
-	$customer = new WC_Customer( $issuer_client_id );
-	$customer_country = $customer->get_country();
+	$order_id = get_post_meta($receipt_id, 'order_id_to_receipt', true);
+	$order = wc_get_order( $order_id );
+
+	$order_customer_country = $order->get_billing_country();
+
+	$customer_country = $order_customer_country;
 
 	if ($customer_country == 'GR') {
 		$sign_issuer_title = '<span class="sign_left">ΕΚΔΟΣΗ</span>';
@@ -241,8 +260,12 @@ function primer_sign_issuer_fullname() {
 	$receipt_id = get_the_ID();
 	$issuer_client_id = get_post_meta($receipt_id, 'receipt_client_id', true);
 
-	$customer = new WC_Customer( $issuer_client_id );
-	$customer_country = $customer->get_country();
+	$order_id = get_post_meta($receipt_id, 'order_id_to_receipt', true);
+	$order = wc_get_order( $order_id );
+
+	$order_customer_country = $order->get_billing_country();
+
+	$customer_country = $order_customer_country;
 
 	if ($customer_country == 'GR') {
 		$sign_issuer_fullname = '<span class="fullname_sign">Ονοματεπώνυμο Υπογραφή</span>';
@@ -259,8 +282,12 @@ function primer_sign_recipient_title() {
 	$receipt_id = get_the_ID();
 	$issuer_client_id = get_post_meta($receipt_id, 'receipt_client_id', true);
 
-	$customer = new WC_Customer( $issuer_client_id );
-	$customer_country = $customer->get_country();
+	$order_id = get_post_meta($receipt_id, 'order_id_to_receipt', true);
+	$order = wc_get_order( $order_id );
+
+	$order_customer_country = $order->get_billing_country();
+
+	$customer_country = $order_customer_country;
 
 	if ($customer_country == 'GR') {
 		$sign_recipient_title = '<span class="sign_right">ΠΑΡΑΛΑΒΗ</span>';
@@ -277,8 +304,12 @@ function primer_sign_recipient_fullname() {
 	$receipt_id = get_the_ID();
 	$issuer_client_id = get_post_meta($receipt_id, 'receipt_client_id', true);
 
-	$customer = new WC_Customer( $issuer_client_id );
-	$customer_country = $customer->get_country();
+	$order_id = get_post_meta($receipt_id, 'order_id_to_receipt', true);
+	$order = wc_get_order( $order_id );
+
+	$order_customer_country = $order->get_billing_country();
+
+	$customer_country = $order_customer_country;
 
 	if ($customer_country == 'GR') {
 		$sign_recipient_fullname = '<span class="fullname_sign">Ονοματεπώνυμο Υπογραφή</span>';
@@ -295,8 +326,12 @@ function primer_sum_unit_title() {
 	$receipt_id = get_the_ID();
 	$issuer_client_id = get_post_meta($receipt_id, 'receipt_client_id', true);
 
-	$customer = new WC_Customer( $issuer_client_id );
-	$customer_country = $customer->get_country();
+	$order_id = get_post_meta($receipt_id, 'order_id_to_receipt', true);
+	$order = wc_get_order( $order_id );
+
+	$order_customer_country = $order->get_billing_country();
+
+	$customer_country = $order_customer_country;
 
 	if ($customer_country == 'GR') {
 		$sum_unit_title = 'ΣΥΝΟΛΟ ΤΕΜΑΧΙΩΝ: ';
@@ -305,6 +340,26 @@ function primer_sum_unit_title() {
 	}
 
 	echo $sum_unit_title;
+}
+
+function primer_sum_unit_count() {
+	$sum_unit_count = '';
+
+	$receipt_id = get_the_ID();
+	$issuer_client_id = get_post_meta($receipt_id, 'receipt_client_id', true);
+
+	$order_id = get_post_meta($receipt_id, 'order_id_to_receipt', true);
+	$order = wc_get_order( $order_id );
+
+	$sum = 0;
+	foreach ( $order->get_items() as $item_id => $item ) {
+		$quantity = $item->get_quantity();
+		$sum += $quantity;
+	}
+
+	$sum_unit_count = $sum;
+
+	echo $sum_unit_count;
 }
 
 function primer_display_issuer_order_total_price() {
@@ -316,10 +371,12 @@ function primer_display_issuer_order_total_price() {
 
 	$issuer_client_id = get_post_meta($receipt_id, 'receipt_client_id', true);
 
-	$customer = new WC_Customer( $issuer_client_id );
-	$customer_country = $customer->get_country();
-
 	$order = wc_get_order( $order_id );
+
+	$order_customer_country = $order->get_billing_country();
+
+	$customer_country = $order_customer_country;
+
 
 	foreach ( $order->get_items() as $item_id => $item ) {
 		$product_id = $item->get_product_id();
@@ -493,14 +550,18 @@ function primer_display_left_customer_info() {
 
 	$issuer_client_id = get_post_meta($receipt_id, 'receipt_client_id', true);
 
-	$customer = new WC_Customer( $issuer_client_id );
+	$order_id = get_post_meta($receipt_id, 'order_id_to_receipt', true);
 
-	$customer_country = $customer->get_country();
+	$total_order = wc_get_order( $order_id );
 
-	$billing_first_name = $customer->get_billing_first_name();
-	$billing_last_name = $customer->get_billing_last_name();
+	$order_customer_country = $total_order->get_billing_country();
 
-	$customer_full_name = $billing_first_name . ' ' . $billing_last_name;
+	$customer_country = $order_customer_country;
+
+	$order_user_first_name = $total_order->get_billing_first_name();
+	$order_user_last_name = $total_order->get_billing_last_name();
+	$customer_full_name = $order_user_first_name . ' ' . $order_user_last_name;
+
 
 	$left_customer_info = '<table>';
 
@@ -527,6 +588,9 @@ function primer_display_left_customer_info() {
 		$vat_number = get_post_meta($order_id, '_billing_vat', true);
 		$doy = get_post_meta($order_id, '_billing_doy', true);
 		$doy_value = primer_return_doy_args()[$doy];
+		if (empty($doy_value)) {
+			$doy_value = $doy;
+		}
 	} else {
 		$profession = '';
 		$vat_number = '';
@@ -586,13 +650,25 @@ function primer_display_right_customer_info() {
 
 	$issuer_client_id = get_post_meta($receipt_id, 'receipt_client_id', true);
 
-	$customer = new WC_Customer( $issuer_client_id );
 
-	$customer_country = $customer->get_country();
+	$order_customer_city = $order->get_billing_city();
+	$order_billing_address_1 = $order->get_billing_address_1();
+	$order_billing_address_2 = $order->get_billing_address_2();
+	$order_shipping_address_1 = $order->get_shipping_address_1();
+	$order_shipping_address_2 = $order->get_shipping_address_2();
+	$order_customer_country = $order->get_billing_country();
 
-	$customer_city = $customer->get_city();
-	$billing_address = $customer->get_billing_address();
-	$shipping_address = $customer->get_shipping_address();
+	$customer_country = $order_customer_country;
+
+	$customer_city = $order_customer_city;
+
+	$billing_address = $order_billing_address_1 . ' ' . $order_billing_address_2;
+
+	if (!empty($order_shipping_address_1)) {
+		$shipping_address = $order_shipping_address_1 . ' ' . $order_shipping_address_2;
+	} else {
+		$shipping_address = $order_billing_address_1 . ' ' . $order_billing_address_2;
+	}
 
 	$payment_type = $order->get_payment_method_title();
 

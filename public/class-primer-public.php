@@ -86,7 +86,8 @@ class Primer_Public {
 		 */
 
 		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/primer-public.css', array(), $this->version, 'all' );
-
+		wp_register_style('primer-select-woo', plugin_dir_url( __FILE__ ) . 'css/select2.css', array(), PRIMER_VERSION, 'all');
+		wp_enqueue_style('primer-select-woo');
 	}
 
 	/**
@@ -109,6 +110,8 @@ class Primer_Public {
 		 */
 
 		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/primer-public.js', array( 'jquery' ), $this->version, false );
+
+		wp_enqueue_script('primer-select-woo-js', plugin_dir_url( __FILE__ ) . 'js/selectWoo.full.js', array('jquery'), PRIMER_VERSION, false);
 
 	}
 

@@ -835,9 +835,18 @@ class Primer_Options {
                 $order_id = get_post_meta($receipt_id, 'order_id_to_receipt', true);
                 $user_id = get_post_meta($receipt_id, 'receipt_client_id', true);
 
+                $order = wc_get_order($order_id);
+
+                $order_email = $order->get_billing_email();
+
                 $user_data = get_user_by('ID', $user_id);
 
-                $user_email = $user_data->user_email;
+                if (empty($order_email)) {
+	                $user_email = $user_data->user_email;
+                } else {
+	                $user_email = $order_email;
+                }
+
                 $user_email = sanitize_email($user_email);
 
 				$upload_dir = wp_upload_dir()['basedir'];

@@ -38,10 +38,25 @@ class PrimerReceiptList {
 					$receipt_in_log = __('Log', 'primer');
 				}
 
+				$order_from_invoice = get_post_meta(get_the_ID(), 'order_id_to_receipt', true);
+
+				$invoice_client = get_post_meta(get_the_ID(), 'receipt_client', true);
+
+				$total_order = wc_get_order( $order_from_invoice );
+
+				$user_first_name = $total_order->get_billing_first_name();
+				$user_last_name = $total_order->get_billing_last_name();
+
+				$user_full_name = $user_first_name . ' ' . $user_last_name;
+
+				if (empty($invoice_client)) {
+					$invoice_client = $user_full_name;
+				}
+
 				$this->receipt_array[$receipt_count]['receipt_id'] = get_the_ID();
 				$this->receipt_array[$receipt_count]['receipt_date'] = get_the_date();
 				$this->receipt_array[$receipt_count]['receipt_hour'] = get_the_time();
-				$this->receipt_array[$receipt_count]['receipt_client'] = get_post_meta(get_the_ID(), 'receipt_client', true);
+				$this->receipt_array[$receipt_count]['receipt_client'] = $invoice_client;
 				$this->receipt_array[$receipt_count]['receipt_product'] = get_post_meta(get_the_ID(), 'receipt_product', true);
 				$this->receipt_array[$receipt_count]['receipt_price'] = get_post_meta(get_the_ID(), 'receipt_price', true);
 				$this->receipt_array[$receipt_count]['receipt_status'] = $receipt_status_text;
@@ -160,10 +175,27 @@ class PrimerReceiptList {
 						$receipt_status_text = 'Not Issued';
 						break;
 				}
+
+				$order_from_invoice = get_post_meta(get_the_ID(), 'order_id_to_receipt', true);
+
+				$invoice_client = get_post_meta(get_the_ID(), 'receipt_client', true);
+
+				$total_order = wc_get_order( $order_from_invoice );
+
+				$user_first_name = $total_order->get_billing_first_name();
+				$user_last_name = $total_order->get_billing_last_name();
+
+				$user_full_name = $user_first_name . ' ' . $user_last_name;
+
+				if (empty($invoice_client)) {
+					$invoice_client = $user_full_name;
+				}
+
+
 				$this->receipt_params_array[$receipt_count]['receipt_id'] = get_the_ID();
 				$this->receipt_params_array[$receipt_count]['receipt_date'] = get_the_date();
 				$this->receipt_params_array[$receipt_count]['receipt_hour'] = get_the_time();
-				$this->receipt_params_array[$receipt_count]['receipt_client'] = get_post_meta(get_the_ID(), 'receipt_client', true);
+				$this->receipt_params_array[$receipt_count]['receipt_client'] = $invoice_client;
 				$this->receipt_params_array[$receipt_count]['receipt_product'] = get_post_meta(get_the_ID(), 'receipt_product', true);
 				$this->receipt_params_array[$receipt_count]['receipt_price'] = get_post_meta(get_the_ID(), 'receipt_price', true);
 				$this->receipt_params_array[$receipt_count]['receipt_status'] = $receipt_status_text;

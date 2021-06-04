@@ -637,8 +637,14 @@ function convert_select_orders() {
 							'post_status' => 'publish',
 						));
 						if ($receipt_log_id) {
+
+							$invoice_date = get_the_date('F j, Y', $post_id);
+
+
 							update_post_meta($receipt_log_id, 'receipt_log_order_id', $id_of_order);
 							update_post_meta($receipt_log_id, 'receipt_log_order_date', $order_paid_date);
+							update_post_meta($receipt_log_id, 'receipt_log_invoice_id', $post_id);
+							update_post_meta($receipt_log_id, 'receipt_log_invoice_date', $invoice_date);
 							update_post_meta($receipt_log_id, 'receipt_log_client', $user_data);
 							$get_issue_status = get_post_meta($post_id, 'receipt_status', true);
 							if(empty($get_issue_status)) {

@@ -28,6 +28,8 @@ class PrimerReceiptLog extends WP_List_Table {
 		return array(
 			'receipt_log_order_id'		=> __( 'Order No', 'primer' ),
 			'receipt_log_order_date' 	=> __( 'Order Date', 'primer' ),
+			'receipt_log_invoice_id'		=> __( 'Invoice No', 'primer' ),
+			'receipt_log_invoice_date' 	=> __( 'Invoice Date', 'primer' ),
 			'receipt_log_client'	=> __( 'Client', 'primer' ),
 			'receipt_log_status' => __( 'Issued receipt', 'primer' ),
 			'receipt_log_email'	=> __( 'Email Send', 'primer' ),

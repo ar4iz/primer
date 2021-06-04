@@ -46,9 +46,51 @@ class PrimerReceiptLogList {
 
 				$receipt_log_error = get_post_meta(get_the_ID(), 'receipt_log_error', true);
 
+				$invoice_log_id = get_post_meta(get_the_ID(), 'receipt_log_invoice_id', true);
+				$invoice_log_date = get_post_meta(get_the_ID(), 'receipt_log_invoice_date', true);
+
+				$log_order_id = get_post_meta(get_the_ID(), 'receipt_log_order_id', true);
+				global $wpdb;
+				$meta_key = 'order_id_to_receipt';
+				$get_invoice_by_id = $wpdb->get_col(
+					$wpdb->prepare(
+						"
+					SELECT key1.post_id
+					FROM $wpdb->postmeta key1
+					WHERE key1.meta_key = %s AND key1.meta_value = '$log_order_id'", $meta_key ) );
+
+				if (empty($invoice_log_id)) {
+					if (!empty($get_invoice_by_id)) {
+						$invoice_log_id = $get_invoice_by_id[0];
+					}
+				}
+				if (empty($invoice_log_date)) {
+					if (!empty($get_invoice_by_id)) {
+						$invoice_log_date = get_the_date('F j, Y', $get_invoice_by_id[0]);
+					}
+				}
+
+				$order_from_invoice_log = get_post_meta(get_the_ID(), 'receipt_log_order_id', true);
+
+				$invoice_log_client = get_post_meta(get_the_ID(), 'receipt_log_client', true);
+
+				$total_order = wc_get_order( $order_from_invoice_log );
+
+				$user_first_name = $total_order->get_billing_first_name();
+				$user_last_name = $total_order->get_billing_last_name();
+
+				$user_full_name = $user_first_name . ' ' . $user_last_name;
+
+				if (empty($invoice_log_client)) {
+					$invoice_log_client = $user_full_name;
+				}
+
+
 				$this->receipt_log_array[$receipt_log_count]['receipt_log_order_id'] = get_post_meta(get_the_ID(), 'receipt_log_order_id', true);
 				$this->receipt_log_array[$receipt_log_count]['receipt_log_order_date'] = get_post_meta(get_the_ID(), 'receipt_log_order_date', true);
-				$this->receipt_log_array[$receipt_log_count]['receipt_log_client'] = get_post_meta(get_the_ID(), 'receipt_log_client', true);
+				$this->receipt_log_array[$receipt_log_count]['receipt_log_invoice_id'] = $invoice_log_id;
+				$this->receipt_log_array[$receipt_log_count]['receipt_log_invoice_date'] = $invoice_log_date;
+				$this->receipt_log_array[$receipt_log_count]['receipt_log_client'] = $invoice_log_client;
 				$this->receipt_log_array[$receipt_log_count]['receipt_log_status'] = $receipt_log_status_text;
 				$this->receipt_log_array[$receipt_log_count]['receipt_log_email'] = $receipt_log_email_status_text;
 				$this->receipt_log_array[$receipt_log_count]['receipt_log_error'] = $receipt_log_error;
@@ -116,11 +158,56 @@ class PrimerReceiptLogList {
 						break;
 				}
 
+				$invoice_log_id = get_post_meta(get_the_ID(), 'receipt_log_invoice_id', true);
+				$invoice_log_date = get_post_meta(get_the_ID(), 'receipt_log_invoice_date', true);
+
+				$log_order_id = get_post_meta(get_the_ID(), 'receipt_log_order_id', true);
+				global $wpdb;
+				$meta_key = 'order_id_to_receipt';
+				$get_invoice_by_id = $wpdb->get_col(
+					$wpdb->prepare(
+						"
+					SELECT key1.post_id
+					FROM $wpdb->postmeta key1
+					WHERE key1.meta_key = %s AND key1.meta_value = '$log_order_id'", $meta_key ) );
+
+				if (empty($invoice_log_id)) {
+					if (!empty($get_invoice_by_id)) {
+						$invoice_log_id = $get_invoice_by_id[0];
+					}
+				}
+				if (empty($invoice_log_date)) {
+					if (!empty($get_invoice_by_id)) {
+						$invoice_log_date = get_the_date('F j, Y', $get_invoice_by_id[0]);
+					}
+				}
+
+
+				$order_from_invoice_log = get_post_meta(get_the_ID(), 'receipt_log_order_id', true);
+
+				$invoice_log_client = get_post_meta(get_the_ID(), 'receipt_log_client', true);
+
+				$total_order = wc_get_order( $order_from_invoice_log );
+
+				$user_first_name = $total_order->get_billing_first_name();
+				$user_last_name = $total_order->get_billing_last_name();
+
+				$user_full_name = $user_first_name . ' ' . $user_last_name;
+
+				if (empty($invoice_log_client)) {
+					$invoice_log_client = $user_full_name;
+				}
+
+
 				$receipt_log_email_error = get_post_meta(get_the_ID(), 'receipt_log_email_error', true);
 
 				$this->receipt_log_params_array[$receipt_count]['receipt_log_order_id'] = get_post_meta(get_the_ID(), 'receipt_log_order_id', true);
 				$this->receipt_log_params_array[$receipt_count]['receipt_log_order_date'] = get_post_meta(get_the_ID(), 'receipt_log_order_date', true);
-				$this->receipt_log_params_array[$receipt_count]['receipt_log_client'] = get_post_meta(get_the_ID(), 'receipt_log_client', true);
+
+				$this->receipt_log_params_array[$receipt_count]['receipt_log_invoice_id'] = $invoice_log_id;
+				$this->receipt_log_params_array[$receipt_count]['receipt_log_invoice_date'] = $invoice_log_date;
+
+				$this->receipt_log_params_array[$receipt_count]['receipt_log_client'] = $invoice_log_client;
 				$this->receipt_log_params_array[$receipt_count]['receipt_log_status'] = $receipt_log_status_text;
 				$this->receipt_log_params_array[$receipt_count]['receipt_log_email'] = $receipt_log_email_status_text;
 				$this->receipt_log_params_array[$receipt_count]['receipt_log_error'] = '';

@@ -43,7 +43,7 @@ class Primer_Licence_Updater {
 	public function license_field( $options ) {
 		$options['fields'][] = array(
 			'name'      => $this->name,
-			'desc'      => __('', 'primer'),
+			'desc'      => '',
 			'id'        => $this->key_name,
 			'type'      => 'text',
 			'after_field' => array( $this, 'after_field' ),

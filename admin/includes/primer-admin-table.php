@@ -658,7 +658,20 @@ function convert_select_orders() {
 						$mailResult = false;
 						$primer_smtp = PrimerSMTP::get_instance();
 
-						$mailResult = wp_mail( $user_order_email, $primer_smtp_subject, $primer_smtp_message, $headers, $attachments );
+
+						$mailResultSMTP = $primer_smtp->primer_mail_sender($user_order_email, $primer_smtp_subject, $primer_smtp_message, $attachments);
+
+						if (!empty($mailResultSMTP['error'])) {
+							$response_data = '<div class="notice notice-error"><p>'.$GLOBALS['phpmailer']->ErrorInfo.'</p></div>';
+							update_post_meta($receipt_log_id, 'receipt_log_email', 'not_sent');
+							update_post_meta($receipt_log_id, 'receipt_log_email_error', $GLOBALS['phpmailer']->ErrorInfo);
+							update_post_meta($receipt_log_id, 'receipt_log_total_status', 'only_errors');
+						} else {
+							update_post_meta($receipt_log_id, 'receipt_log_email', 'sent');
+							update_post_meta($receipt_log_id, 'receipt_log_total_status', 'only_issued');
+						}
+
+						/*$mailResult = wp_mail( $user_order_email, $primer_smtp_subject, $primer_smtp_message, $headers, $attachments );
 
 						if (!$mailResult) {
 							$response_data = '<div class="notice notice-error"><p>'.$GLOBALS['phpmailer']->ErrorInfo.'</p></div>';
@@ -668,7 +681,7 @@ function convert_select_orders() {
 						} else {
 							update_post_meta($receipt_log_id, 'receipt_log_email', 'sent');
 							update_post_meta($receipt_log_id, 'receipt_log_total_status', 'only_issued');
-						}
+						}*/
 
 
 						update_post_meta($post_id, 'exist_error_log', 'exist_log');

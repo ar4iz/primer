@@ -15,8 +15,8 @@ class PrimerSMTP {
 
 		require_once 'class-primer-smtp-utils.php';
 
-		add_filter( 'wp_mail', array( $this, 'wp_mail' ), 2147483647 );
-		add_action( 'phpmailer_init', array( $this, 'init_smtp' ), 999 );
+//		add_filter( 'wp_mail', array( $this, 'wp_mail' ), 2147483647 );
+//		add_action( 'phpmailer_init', array( $this, 'init_smtp' ), 999 );
 		add_action( 'admin_notices', array( $this, 'admin_notices' ) );
 		add_action( 'wp_mail_failed', array( $this, 'wp_mail_failed' ) );
 	}
@@ -178,6 +178,115 @@ class PrimerSMTP {
 //			echo '</h3></div>';
 //		}
 
+	}
+
+	public function primer_mail_sender($send_to_mail, $mail_subject, $mail_message, $attachments) {
+		$response = array();
+		//check if SMTP credentials have been configured.
+		if ( ! $this->credentials_configured() ) {
+			return;
+		}
+
+		global $wp_version;
+
+		if ( version_compare( $wp_version, '5.4.99' ) > 0 ) {
+			require_once ABSPATH . WPINC . '/PHPMailer/PHPMailer.php';
+			require_once ABSPATH . WPINC . '/PHPMailer/SMTP.php';
+			require_once ABSPATH . WPINC . '/PHPMailer/Exception.php';
+			$mail = new PHPMailer( true );
+		} else {
+			require_once ABSPATH . WPINC . '/class-phpmailer.php';
+			$mail = new \PHPMailer( true );
+		}
+
+		try {
+			$mail->IsSMTP();
+
+			$charset       = get_bloginfo( 'charset' );
+			$mail->CharSet = $charset;
+			// send plain text test email
+			$mail->ContentType = 'text/html';
+			$mail->IsHTML( true );
+
+
+			/* If using smtp auth, set the username & password */
+			if ( 'yes' === $this->opts['smtp_settings']['authentication'] ) {
+				$mail->SMTPAuth = true;
+				if (!empty($this->opts['smtp_settings']['username'])) {
+					$mail->Username = $this->opts['smtp_settings']['username'];
+				}
+				$mail->Password = $this->get_password();
+			}
+
+			/* Set the SMTPSecure value, if set to none, leave this blank */
+			if ( 'none' !== $this->opts['smtp_settings']['type_encryption'] ) {
+				$mail->SMTPSecure = $this->opts['smtp_settings']['type_encryption'];
+			} else {
+				$mail->SMTPSecure = 'ssl';
+			}
+
+			/* PHPMailer 5.2.10 introduced this option. However, this might cause issues if the server is advertising TLS with an invalid certificate. */
+			$mail->SMTPAutoTLS = true;
+
+			/* Set the other options */
+			if (!empty($this->opts['smtp_settings']['smtp_server'])) {
+				$mail->Host = $this->opts['smtp_settings']['smtp_server'];
+			}
+
+			if (!empty($this->opts['smtp_settings']['port'])) {
+				$mail->Port = $this->opts['smtp_settings']['port'];
+			}
+			$request_port = isset($_POST['primer_smtp_port']) ? $_POST['primer_smtp_port'] : '';
+			if (!empty($this->opts['smtp_settings']['port']) && !empty($request_host)) {
+				$mail->Port = $request_port;
+			}
+
+
+			$send_from_mail = $this->opts['from_email_field'];
+			$from_name  = get_bloginfo( 'name' );
+			$mail->SetFrom( $send_from_mail, $from_name );
+
+			$mail->Subject = $mail_subject;
+			$mail->Body    = $mail_message;
+			$mail->AddAddress( $send_to_mail, 'User Name' );
+
+			$mail->addAttachment($attachments);
+
+			global $debug_msg;
+			$debug_msg         = '';
+			$mail->Debugoutput = function ( $str, $level ) {
+				global $debug_msg;
+				$debug_msg .= $str;
+			};
+			$mail->SMTPDebug   = 2;
+			//set reasonable timeout
+			$mail->Timeout = 10;
+
+			/* Send mail and return result */
+			$mail->Send();
+
+			$mail->ClearAddresses();
+			$mail->ClearAllRecipients();
+
+		} catch ( \Exception $e ) {
+			$response['error'] = $mail->ErrorInfo;
+		} catch ( \Throwable $e ) {
+			$response['error'] = $mail->ErrorInfo;
+		}
+		$response['debug_log'] = $debug_msg;
+
+		if (!empty($response['error'])) {
+			echo '<div class="primer_popup popup_error"><h3>';
+			echo $response['error'];
+			echo '</h3></div>';
+		}
+		else {
+			echo '<div class="primer_popup popup_success"><h3>';
+			_e('Test email sent successfully', 'primer');
+			echo '</h3></div>';
+		}
+
+		return $response;
 	}
 
 	public function test_mail( $to_email, $subject, $message ) {

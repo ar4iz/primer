@@ -44,49 +44,77 @@ define( 'PRIMER_VERSION', '1.0.0' );
 define( 'PRIMER_PATH', plugin_dir_path( __FILE__ ) );
 define( 'PRIMER_URL', plugins_url( '', __FILE__ ) );
 
-/**
- * The code that runs during plugin activation.
- * This action is documented in includes/class-primer-activator.php
- */
-function activate_primer() {
-	require_once PRIMER_PATH . 'includes/class-primer-activator.php';
-	Primer_Activator::activate();
+
+if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_option('active_plugins'))) || is_multisite() && in_array('woocommerce/woocommerce.php', array_flip(get_site_option('active_sitewide_plugins'))) ) {
+	/**
+	 * The code that runs during plugin activation.
+	 * This action is documented in includes/class-primer-activator.php
+	 */
+	function activate_primer() {
+		require_once PRIMER_PATH . 'includes/class-primer-activator.php';
+		Primer_Activator::activate();
+	}
+
+	/**
+	 * The code that runs during plugin deactivation.
+	 * This action is documented in includes/class-primer-deactivator.php
+	 */
+	function deactivate_primer() {
+		require_once PRIMER_PATH . 'includes/class-primer-deactivator.php';
+		Primer_Deactivator::deactivate();
+	}
+
+	register_activation_hook( __FILE__, 'activate_primer' );
+	register_deactivation_hook( __FILE__, 'deactivate_primer' );
+
+
+	/**
+	 * The core plugin class that is used to define internationalization,
+	 * admin-specific hooks, and public-facing site hooks.
+	 */
+	require PRIMER_PATH . 'includes/class-primer.php';
+
+	/**
+	 * Begins execution of the plugin.
+	 *
+	 * Since everything within the plugin is registered via hooks,
+	 * then kicking off the plugin from this point in the file does
+	 * not affect the page life cycle.
+	 *
+	 * @since    1.0.0
+	 */
+	function run_primer() {
+
+		$plugin = new Primer();
+		$plugin->run();
+
+	}
+
+	add_action( 'plugins_loaded', 'run_primer' ); // wait until 'plugins_loaded' hook fires, for WP Multisite compatibility
+} else {
+
+	add_action('admin_notices', 'primer_error_notice');
+
+	function primer_error_notice() {
+		global $current_screen;
+		if ($current_screen->parent_base == 'plugins') {
+			echo '<div class="error"><p>Primer '.__('requires <a href="https://wordpress.org/plugins/woocommerce/" target="_blank">WooCommerce</a> to be activated to work. Please install and activate <a href="'.admin_url('plugin-install.php?tab=search&type=term&s=WooCommerce').'" target="_blank">Woocommerce</a> first.', 'primer').'</p></div>';
+		}
+	}
+
+	$plugin = plugin_basename(__FILE__);
+
+	include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
+
+	if(is_plugin_active($plugin)){
+		deactivate_plugins( $plugin);
+	}
+
+	if ( isset( $_GET['activate'] ) ) unset( $_GET['activate'] );
+
 }
 
-/**
- * The code that runs during plugin deactivation.
- * This action is documented in includes/class-primer-deactivator.php
- */
-function deactivate_primer() {
-	require_once PRIMER_PATH . 'includes/class-primer-deactivator.php';
-	Primer_Deactivator::deactivate();
-}
 
-register_activation_hook( __FILE__, 'activate_primer' );
-register_deactivation_hook( __FILE__, 'deactivate_primer' );
-
-/**
- * The core plugin class that is used to define internationalization,
- * admin-specific hooks, and public-facing site hooks.
- */
-require PRIMER_PATH . 'includes/class-primer.php';
-
-/**
- * Begins execution of the plugin.
- *
- * Since everything within the plugin is registered via hooks,
- * then kicking off the plugin from this point in the file does
- * not affect the page life cycle.
- *
- * @since    1.0.0
- */
-function run_primer() {
-
-	$plugin = new Primer();
-	$plugin->run();
-
-}
-//run_primer();
 
 // Patch for Sage-based themes
 function primer_patch_for_sage_based_themes() {
@@ -132,6 +160,4 @@ function primer_patch_for_sage_based_themes() {
 	}
 	return FALSE;
 }
-
-add_action( 'plugins_loaded', 'run_primer' ); // wait until 'plugins_loaded' hook fires, for WP Multisite compatibility
 add_action( 'get_template_part_primer-receipt-display', 'primer_patch_for_sage_based_themes' );

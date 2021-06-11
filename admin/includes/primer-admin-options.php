@@ -202,7 +202,7 @@ class Primer_Options {
 
 				array(
 					'name'		=> __( 'Invoice Settings', 'primer' ),
-					'desc'		=> __('', 'primer'),
+					'desc'		=> '',
 					'default'	=> '',
 					'id'		=> 'title_invoice_settings',
 					'type'		=> 'title',
@@ -321,7 +321,7 @@ class Primer_Options {
 
 				/*array(
 					'name'		=> __( 'VAT Settings:', 'primer' ),
-					'desc'		=> __('', 'primer'),
+					'desc'		=> '',
 					'default'	=> '',
 					'id'		=> 'title_vat_settings',
 					'type'		=> 'title',
@@ -329,7 +329,7 @@ class Primer_Options {
 
 				array(
 					'name'		=> __( 'VAT %', 'primer' ),
-					'desc'		=> __('', 'primer'),
+					'desc'		=> '',
 					'default'	=> __( 'Woocommerce VAT category', 'primer' ),
 					'type'		=> 'text',
 					'id'		=> 'vat_percents',
@@ -343,7 +343,7 @@ class Primer_Options {
 
 				array(
 					'name'		=> __( '24%', 'primer' ),
-					'desc'		=> __('', 'primer'),
+					'desc'		=> '',
 					'default'	=> '',
 					'type'		=> 'select',
 					'id'		=> 'standard_vat_rates',
@@ -352,7 +352,7 @@ class Primer_Options {
 
 				array(
 					'name'		=> __( '17%', 'primer' ),
-					'desc'		=> __('', 'primer'),
+					'desc'		=> '',
 					'default'	=> '',
 					'type'		=> 'select',
 					'id'		=> 'seventeen_vat_rates',
@@ -361,7 +361,7 @@ class Primer_Options {
 
 				array(
 					'name'		=> __( '13%', 'primer' ),
-					'desc'		=> __('', 'primer'),
+					'desc'		=> '',
 					'default'	=> '',
 					'type'		=> 'select',
 					'id'		=> 'thirteen_vat_rates',
@@ -370,7 +370,7 @@ class Primer_Options {
 
 				array(
 					'name'		=> __( '9%', 'primer' ),
-					'desc'		=> __('', 'primer'),
+					'desc'		=> '',
 					'default'	=> '',
 					'type'		=> 'select',
 					'id'		=> 'nine_vat_rates',
@@ -379,7 +379,7 @@ class Primer_Options {
 
 				array(
 					'name'		=> __( '6%', 'primer' ),
-					'desc'		=> __('', 'primer'),
+					'desc'		=> '',
 					'default'	=> '',
 					'type'		=> 'select',
 					'id'		=> 'six_vat_rates',
@@ -388,7 +388,7 @@ class Primer_Options {
 
 				array(
 					'name'		=> __( '4%', 'primer' ),
-					'desc'		=> __('', 'primer'),
+					'desc'		=> '',
 					'default'	=> '',
 					'type'		=> 'select',
 					'id'		=> 'four_vat_rates',
@@ -397,7 +397,7 @@ class Primer_Options {
 
 				array(
 					'name'		=> __( '0%', 'primer' ),
-					'desc'		=> __('', 'primer'),
+					'desc'		=> '',
 					'default'	=> '',
 					'type'		=> 'select',
 					'id'		=> 'zero_vat_rates',
@@ -416,7 +416,7 @@ class Primer_Options {
 			'fields'		=> array(
 				array(
 					'name'		=> __( 'Email SMTP settings', 'primer' ),
-					'desc'		=> __('', 'primer'),
+					'desc'		=> '',
 					'default'	=> '',
 					'id'		=> 'title_email_smtp_settings',
 					'type'		=> 'title',
@@ -571,9 +571,7 @@ class Primer_Options {
 							'name'       => __( 'Issue receipt if order state is: ', 'primer' ),
 							'id'         => 'receipt_order_states',
 							'type'       => 'select',
-							'options'	=> array(
-								'' => __('Get order states from', 'primer')
-							)
+							'options'	=> $this->get_status_of_orders(),
 						),
 						array(
 							'name'       => __( 'And payment state is ', 'primer' ),
@@ -618,8 +616,8 @@ class Primer_Options {
 
 				array(
 					'name'	=> __( 'Admin email', 'primer' ),
-					'desc' => '',
-					'type'	=> 'text_email',
+					'desc' => __('(use comma (,) without spaces for multiple emails)', 'primer'),
+					'type'	=> 'text',
 					'id'	=> 'admin_email',
 				),
 
@@ -685,6 +683,19 @@ class Primer_Options {
 
 	}
 
+	/**
+	 * Get the list of Woocommerce Order Statuses
+	 *
+	 * @since   1.0.0
+	 */
+	public function get_status_of_orders() {
+		$order_all_statuses = array( '' => __('Select order status', 'primer') );
+		$status_of_orders = wc_get_order_statuses();
+		foreach ( $status_of_orders as $status_k => $status_value ) {
+			$order_all_statuses[$status_k] = $status_value;
+		}
+		return $order_all_statuses;
+	}
 
 	/**
 	 * Get the list of Woocommerce Standard rates to add to dropdowns in the settings.

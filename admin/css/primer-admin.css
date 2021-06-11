@@ -165,14 +165,27 @@
 #primer_conditions_repeat .inside.cmb-td.cmb-nested.cmb-field-list {
     display: flex;
     width: 100%;
-    justify-content: space-between;
+    justify-content: flex-start;
+    align-items: center;
 }
 #primer_conditions_repeat .inside.cmb-td.cmb-nested.cmb-field-list .cmb-row .cmb-th, #primer_conditions_repeat .inside.cmb-td.cmb-nested.cmb-field-list .cmb-row .cmb-td {
     width: auto;
 }
 #primer_conditions_repeat .inside.cmb-td.cmb-nested.cmb-field-list .cmb-row {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    align-items: center;
+    flex: 1;
+}
+#primer_conditions_repeat .inside.cmb-td.cmb-nested.cmb-field-list .cmb-row[data-fieldtype=checkbox] {
+    margin-bottom: 2px;
+}
+#primer_conditions_repeat .cmb-th label {
+    white-space: nowrap;
+}
+
+#primer_automation .cmb2-id-send-email-to-admin .cmb-td, #primer_automation .cmb2-id-send-successful-log .cmb-td, #primer_automation .cmb2-id-send-failed-log .cmb-td {
+    padding-top: 22px;
 }
 
 .send_receipts_wrap {

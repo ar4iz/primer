@@ -188,6 +188,13 @@
     padding-top: 22px;
 }
 
+#primer_automation .cmb2-id-log-button {
+    float: left;
+}
+#primer_automation .cmb2-id-log-button .cmb-td {
+    padding-left: 0;
+}
+
 .send_receipts_wrap {
     margin-right: 30px;
 }

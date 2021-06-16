@@ -123,6 +123,9 @@ class Primer {
 		require_once PRIMER_PATH . 'includes/class-primer-settings.php';
 		require_once PRIMER_PATH . 'includes/vendor/cmb2/init.php';
 
+		require_once PRIMER_PATH . 'includes/vendor/conditional/cmb2-conditionals.php';
+//		require_once PRIMER_PATH . 'includes/vendor/conditional/example-functions.php';
+
 		require_once PRIMER_PATH . 'includes/vendor/dompdf/autoload.inc.php';
 
 		require_once PRIMER_PATH . 'includes/template-tags/primer-tags-receipt.php';
@@ -184,6 +187,7 @@ class Primer {
 		$this->loader->add_action( 'init', $plugin_admin, 'new_taxonomy_receipt_status', 1 );
 		$this->loader->add_action( 'init', $plugin_admin, 'new_cpt_receipt', 1 );
 		$this->loader->add_action( 'init', $plugin_admin, 'new_cpt_receipt_log', 1 );
+		$this->loader->add_action( 'init', $plugin_admin, 'new_cpt_receipt_log_automation', 1 );
 		$this->loader->add_action( 'init', $plugin_admin, 'register_new_terms', 1 );
 
 		$this->loader->add_action( 'init', $plugin_admin, 'primer_create_tax_rates', 1 );
@@ -218,6 +222,19 @@ class Primer {
 		$this->loader->add_filter( 'admin_notices', $plugin_admin, 'custom_admin_notices' );
 
 		$this->loader->add_action( 'primer_receipts_hourly_tasks', $plugin_admin, 'primer_receipts_hourly_tasks' );
+
+		$this->loader->add_action( 'primer_cron_process', $plugin_admin, 'convert_order_to_invoice', 10 );
+
+		$this->loader->add_filter('cron_schedules', $plugin_admin, 'intervals');
+
+		add_action('cmb2_save_field', function ($field_id, $updated, $action, $field) {
+			if ($field_id == 'activation_automation') {
+				$plugin_admin = new Primer_Admin( $this->get_plugin_name(), $this->get_version() );
+				$plugin_admin->convert_order_to_invoice();
+			}
+		}, 10, 4);
+
+//		$this->loader->add_action('cmb2_save_page_fields_primer_automation', $plugin_admin, 'convert_order_to_invoice', 10);
 
 	}
 

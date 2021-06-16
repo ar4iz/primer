@@ -250,6 +250,48 @@
 				}
 			}
 		});
+
+
+		var getUrlParameter = function getUrlParameter(sParam) {
+			var sPageURL = window.location.search.substring(1),
+				sURLVariables = sPageURL.split('&'),
+				sParameterName,
+				i;
+
+			for (i = 0; i < sURLVariables.length; i++) {
+				sParameterName = sURLVariables[i].split('=');
+
+				if (sParameterName[0] === sParam) {
+					return typeof sParameterName[1] === undefined ? true : decodeURIComponent(sParameterName[1]);
+				}
+			}
+			return false;
+		};
+
+		if (getUrlParameter('tab') == 'automation') {
+			var val_args = {};
+			$('#primer_automation').on('change', function (el) {
+				var element = $(el.target);
+				var conditional_selects = $('select[id*="_receipt_order_states"]');
+				if (conditional_selects.length && element.is('select')) {
+					for(let i = 0; i < conditional_selects.length; i++) {
+						val_args[i] = $(conditional_selects[i]).val();
+					}
+				}
+				var selectsVal = Object.values(val_args);
+				let result = selectsVal.some((element, index) => {return selectsVal.indexOf(element) !== index});
+				if (result) {
+					var popup_data = '<div class="primer_popup popup_error"><h3>Duplicate values are not accepted. Please select a different option</h3></div>';
+					$('#primer_automation').append(popup_data)
+					popupOpenClose('.primer_popup');
+				}
+			});
+
+			$(document).on('input', 'input[name="admin_email"]', function () {
+				this.value = $.trim(this.value);
+			})
+		}
+
 	});
 
 })( jQuery );

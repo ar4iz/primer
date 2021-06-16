@@ -20,6 +20,10 @@
  * @subpackage Primer/admin
  * @author     test_user <testwe@gmail.com>
  */
+
+// reference the Dompdf namespace
+use Dompdf\Dompdf;
+
 class Primer_Admin {
 
 	/**
@@ -101,6 +105,8 @@ class Primer_Admin {
 		wp_enqueue_style('primer-jquery-ui');
 		wp_enqueue_script('jquery-ui-datepicker');
 
+		wp_enqueue_script('cmb2-conditional', PRIMER_URL . '/includes/vendor/conditional/cmb2-conditionals.js');
+
 		//Bootstrap select
 		$screen = get_current_screen();
 		if ( $screen->id == "toplevel_page_wp_ajax_list_order" || $screen->id == "primer-receipts_page_primer_receipts" || $screen->id == "admin_page_primer_receipts_logs" ) {
@@ -116,6 +122,7 @@ class Primer_Admin {
 			wp_enqueue_script('primer-bootstrap-select-js', PRIMER_URL . '/public/js/bootstrap-select.min.js', array('jquery'), PRIMER_VERSION, true);
 
 			wp_enqueue_script('primer-select-woo-js', PRIMER_URL . '/public/js/selectWoo.full.js', array('jquery'), PRIMER_VERSION, false);
+
 		}
 
 	}
@@ -408,6 +415,88 @@ class Primer_Admin {
 		$opts = apply_filters('primer_receipt_log_params', $opts);
 
 		register_post_type('primer_receipt_log', $opts );
+	}
+
+	/**
+	 * Creates a new custom post type for receipt report automation
+	 *
+	 * @since 	1.0.0
+	 */
+	public function new_cpt_receipt_log_automation() {
+
+		$translate = get_option( 'primer_translate' );
+
+		$cap_type = 'post';
+		$plural = primer_get_receipt_log_automation_label_plural();
+		$single = primer_get_receipt_log_automation_label();
+		$cpt_name = 'pr_log_automation';
+
+		$opts['can_export']             = TRUE;
+		$opts['capability_type']        = $cap_type;
+		$opts['description']            = '';
+		$opts['exclude_from_search']    = TRUE;
+		$opts['has_archive']            = FALSE;
+		$opts['hierarchical']           = TRUE;
+		$opts['map_meta_cap']           = TRUE;
+		$opts['menu_icon']              = 'dashicons-text-page';
+		$opts['public']                 = TRUE;
+		$opts['publicly_querable']      = TRUE;
+		$opts['query_var']              = TRUE;
+		$opts['register_meta_box_cb']   = '';
+		$opts['rewrite']                = FALSE;
+		$opts['show_in_admin_bar']      = TRUE;
+		$opts['show_in_menu']           = TRUE;
+		$opts['show_in_nav_menu']       = FALSE;
+		$opts['show_ui']                = TRUE;
+		$opts['supports']			    = array( 'title', 'comments' );
+		$opts['taxonomies']				= array( 'receipt_status' );
+
+		$opts['capabilities']['delete_others_posts']	= "delete_others_{$cap_type}s";
+		$opts['capabilities']['delete_post']			= "delete_{$cap_type}";
+		$opts['capabilities']['delete_posts']			= "delete_{$cap_type}s";
+		$opts['capabilities']['delete_private_posts']	= "delete_private_{$cap_type}s";
+		$opts['capabilities']['delete_published_posts']	= "delete_published_{$cap_type}s";
+		$opts['capabilities']['edit_others_posts']		= "edit_others_{$cap_type}s";
+		$opts['capabilities']['edit_post']				= "edit_{$cap_type}";
+		$opts['capabilities']['edit_posts']				= "edit_{$cap_type}s";
+		$opts['capabilities']['edit_private_posts']		= "edit_private_{$cap_type}s";
+		$opts['capabilities']['edit_published_posts']	= "edit_published_{$cap_type}s";
+		$opts['capabilities']['publish_posts']			= "publish_{$cap_type}s";
+		$opts['capabilities']['read_post']				= "read_{$cap_type}";
+		$opts['capabilities']['read_private_posts']		= "read_private_{$cap_type}s";
+
+		/* translators: %s is a placeholder for the localized word "Receipt" (singular) */
+		$opts['labels']['add_new']						= sprintf( __( 'Add New %s', 'primer' ), $single );
+		/* translators: %s is a placeholder for the localized word "Receipt" (singular) */
+		$opts['labels']['add_new_item']					= sprintf( __( 'Add New %s', 'primer' ), $single );
+		$opts['labels']['all_items']					= $plural;
+		/* translators: %s is a placeholder for the localized word "Receipt" (singular) */
+		$opts['labels']['edit_item']					= sprintf( __( 'Edit %s' , 'primer' ), $single );
+		$opts['labels']['menu_name']					= $plural;
+		$opts['labels']['name']							= $plural;
+		$opts['labels']['name_admin_bar']				= $single;
+		/* translators: %s is a placeholder for the localized word "Receipt" (singular) */
+		$opts['labels']['new_item']						= sprintf( __( 'New %s', 'primer' ), $single );
+		/* translators: %s is a placeholder for the localized word "Receipts" (plural) */
+		$opts['labels']['not_found']					= sprintf( __( 'No %s Found', 'primer' ), $plural );
+		/* translators: %s is a placeholder for the localized word "Receipts" (plural) */
+		$opts['labels']['not_found_in_trash']			= sprintf( __( 'No %s Found in Trash', 'primer' ), $plural );
+		/* translators: %s is a placeholder for the localized word "Receipt" (singular) */
+		$opts['labels']['parent_item_colon']			= sprintf( __( 'Parent %s:', 'primer' ), $single );
+		/* translators: %s is a placeholder for the localized word "Receipts" (plural) */
+		$opts['labels']['search_items']					= sprintf( __( 'Search %s', 'primer' ), $plural );
+		$opts['labels']['singular_name']				= $single;
+		/* translators: %s is a placeholder for the localized word "Receipt" (singular) */
+		$opts['labels']['view_item']					= sprintf( __( 'View %s', 'primer' ), $single );
+
+		$opts['rewrite']['slug']						= FALSE;
+		$opts['rewrite']['with_front']					= FALSE;
+		$opts['rewrite']['feeds']						= FALSE;
+		$opts['rewrite']['pages']						= FALSE;
+
+		$opts = apply_filters('pr_log_automation_params', $opts);
+
+		register_post_type('pr_log_automation', $opts );
 	}
 
 	public function primer_create_tax_rates() {
@@ -788,6 +877,278 @@ class Primer_Admin {
 		}
 
 		return $classes;
+	}
+
+	/**
+	 * Primer Automation Settings conversation
+	 */
+	public function convert_order_to_invoice() {
+		global $wpdb, $woocommerce;
+
+
+		$receipt_log_automation_value = '';
+
+		$emails = array();
+
+		$send_to_admin = '';
+
+		$automation_duration = '';
+
+		// Get Notification Emails
+		$automation_options = get_option('primer_automation');
+
+		$activation_automation = $automation_options['activation_automation'];
+
+		if (!empty($automation_options) && !empty($activation_automation)) {
+
+			$primer_conditions = $automation_options['primer_conditions'];
+
+			$primer_start_order_date = $automation_options['calendar_date_timestamp'];
+
+			if (!empty($primer_conditions)) {
+
+				$automation_duration = $automation_options['automation_duration'];
+				if (!empty($automation_duration)) {
+					wp_schedule_event(time(), $automation_duration, 'primer_cron_process');
+				}
+
+				$condition_order_status = '';
+				foreach ( $primer_conditions as $primer_condition ) {
+					$condition_order_status = $primer_condition['receipt_order_states'];
+					$condition_client_email_send = $primer_condition['client_email_send'];
+					$order_args           = array(
+						'return'      => 'ids',
+						'limit'       => 9999,
+						'order'       => 'DESC',
+						'numberposts' => - 1,
+					);
+
+					$order_args['status'] = $condition_order_status;
+
+					if (!empty($primer_start_order_date)) {
+						$order_args['date_created'] = '>' . $primer_start_order_date;
+					}
+
+					$orders = wc_get_orders( $order_args );
+
+					foreach ( $orders as $order_id ) {
+						$order = wc_get_order( $order_id );
+
+						$id_of_order = $order->get_id();
+
+						$issued_order = get_post_meta($id_of_order, 'receipt_status', true);
+
+						if (empty($issued_order) || $issued_order == 'not_issued') {
+
+							$order_country     = $order->get_billing_country();
+							$order_create_date = date( 'F j, Y', $order->get_date_created()->getOffsetTimestamp() );
+							$order_paid_date   = null;
+							$order_paid_hour   = null;
+							if ( ! empty( $order->get_date_paid() ) ) {
+								$order_paid_date = date( 'F j, Y', $order->get_date_paid()->getTimestamp() );
+								$order_paid_hour = date( 'H:i:s', $order->get_date_paid()->getTimestamp() );
+							} else {
+								$order_paid_date = date( 'F j, Y', $order->get_date_created()->getTimestamp() );
+								$order_paid_hour = date( 'H:i:s', $order->get_date_created()->getTimestamp() );
+							}
+
+							$order_total_price = $order->get_total();
+							$user_id           = $order->get_user_id();
+							$user              = $order->get_user();
+
+							$user_first_name = $order->get_billing_first_name();
+							$user_last_name  = $order->get_billing_last_name();
+
+							$user_full_name = $user_first_name . ' ' . $user_last_name;
+
+							$tax = $order->get_total_tax();
+
+							$order_invoice_type = get_post_meta( $id_of_order, '_billing_invoice_type', true );
+
+							$insert_taxonomy = 'receipt_status';
+							$invoice_term    = '';
+
+							if ( $order_invoice_type == 'receipt' && $order_country == 'GR' ) {
+								$invoice_term = 'greek_receipt';
+							}
+							if ( $order_invoice_type == 'receipt' && $order_country !== 'GR' ) {
+								$invoice_term = 'english_receipt';
+							}
+							if ( $order_invoice_type == 'invoice' && $order_country == 'GR' ) {
+								$invoice_term = 'greek_invoice';
+							}
+							if ( $order_invoice_type == 'invoice' && $order_country !== 'GR' ) {
+								$invoice_term = 'english_invoice';
+							}
+
+							$user_data = $user ? $user_full_name : $user->display_name;
+
+							$user_order_email = $order->get_billing_email();
+
+							$currency        = $order->get_currency();
+							$currency_symbol = get_woocommerce_currency_symbol( $currency );
+							$payment_method  = $order->get_payment_method();
+							$payment_title   = $order->get_payment_method_title();
+							$order_status    = $order->get_status();
+
+							if ( $currency == 'EUR' ) {
+								if ( $tax != '0' ) {
+									$post_id = wp_insert_post( array(
+										'post_type'      => 'primer_receipt',
+										'post_title'     => 'Receipt for order #' . $id_of_order,
+										'comment_status' => 'closed',
+										'ping_status'    => 'closed',
+										'post_status'    => 'publish',
+									) );
+
+									wp_set_object_terms( $post_id, $invoice_term, $insert_taxonomy, false );
+
+									if ( $post_id ) {
+										$post_issued = 'issued';
+										if ( empty( $user_data ) ) {
+											$post_issued                  = 'not_issued';
+											$receipt_log_automation_value .= __( 'Order Client name is required!', 'primer' );
+										}
+
+										update_post_meta( $post_id, 'receipt_status', $post_issued );
+										update_post_meta( $post_id, 'order_id_to_receipt', $id_of_order );
+										update_post_meta( $id_of_order, 'receipt_status', $post_issued );
+										add_post_meta( $post_id, 'receipt_client', $user_data );
+										add_post_meta( $post_id, 'receipt_client_id', $user_id );
+										add_post_meta( $post_id, 'receipt_price', $order_total_price . ' ' . $currency_symbol );
+										foreach ( $order->get_items() as $item_id => $item_data ) {
+											$product_name = $item_data->get_name();
+											add_post_meta( $post_id, 'receipt_product', $product_name );
+										}
+
+										$post_url = get_the_permalink($post_id);
+										$homepage = file_get_contents($post_url);
+
+										// instantiate and use the dompdf class
+										$dompdf = new Dompdf();
+										$options= $dompdf->getOptions();
+										$options->setIsHtml5ParserEnabled(true);
+										$dompdf->setOptions($options);
+
+										$dompdf->loadHtml($homepage);
+
+										// Render the HTML as PDF
+										$dompdf->render();
+
+										$upload_dir = wp_upload_dir()['basedir'];
+
+										if (!file_exists($upload_dir . '/email-invoices')) {
+											mkdir($upload_dir . '/email-invoices');
+										}
+										$post_name = get_the_title($post_id);
+										$post_name = str_replace(' ', '_', $post_name);
+										$post_name = str_replace('#', '', $post_name);
+										$post_name = strtolower($post_name);
+
+										$output = $dompdf->output();
+										file_put_contents($upload_dir . '/email-invoices/'.$post_name.'.pdf', $output);
+
+										$attachments = $upload_dir . '/email-invoices/'.$post_name.'.pdf';
+
+										$user_email = $user ? $user_order_email : $user->user_email;
+
+										$primer_smtp_options = get_option('primer_emails');
+
+										$headers = 'From: ' . $primer_smtp_options['from_email_field'] ? $primer_smtp_options['from_email_field'] : 'Primer '. get_bloginfo('admin_email');
+										if (!empty($automation_options['email_subject'])) {
+											$primer_smtp_subject = $automation_options['email_subject'];
+										} else {
+											$primer_smtp_subject = __('Test email subject', 'primer');
+										}
+
+										if (!empty($primer_smtp_options['quote_available_content'])) {
+											$primer_smtp_message = $primer_smtp_options['quote_available_content'];
+										} else {
+											$primer_smtp_message = __('Test email message', 'primer');
+										}
+
+										$receipt_log_automation_id = wp_insert_post(array(
+											'post_type' => 'pr_log_automation',
+											'post_title' => 'Receipt automation report for #' . $id_of_order,
+											'comment_status' => 'closed',
+											'ping_status' => 'closed',
+											'post_status' => 'publish',
+										));
+
+										if ($receipt_log_automation_id) {
+											$invoice_date = get_the_date('F j, Y', $post_id);
+
+											update_post_meta($receipt_log_automation_id, 'receipt_log_automation_order_id', $id_of_order);
+											update_post_meta($receipt_log_automation_id, 'receipt_log_automation_order_date', $order_paid_date);
+											update_post_meta($receipt_log_automation_id, 'receipt_log_automation_invoice_id', $post_id);
+											update_post_meta($receipt_log_automation_id, 'receipt_log_automation_invoice_date', $invoice_date);
+											update_post_meta($receipt_log_automation_id, 'receipt_log_automation_client', $user_data);
+											$get_issue_status = get_post_meta($post_id, 'receipt_status', true);
+											if(empty($get_issue_status)) {
+												$get_issue_status = 'issued';
+											}
+
+											update_post_meta($receipt_log_automation_id, 'receipt_log_automation_status', $get_issue_status);
+											update_post_meta($receipt_log_automation_id, 'receipt_log_automation_error', $receipt_log_automation_value);
+										}
+
+
+										$mailResult = false;
+										$primer_smtp = PrimerSMTP::get_instance();
+
+										$check_send_email = $automation_options['send_email_to_admin'];
+										if (!empty($check_send_email)) {
+											if ($check_send_email == 'on') {
+												$automation_admin_emails = $automation_options['admin_email'];
+												if (!empty($automation_admin_emails)) {
+													$admin_emails = explode(',', $automation_admin_emails);
+													foreach ( $admin_emails as $admin_email ) {
+														$emails[] = trim( sanitize_email($admin_email) );
+													}
+													if (!empty($emails)) {
+														foreach ( $emails as $to_admin_email ) {
+															$mailResultSMTP = $primer_smtp->primer_mail_sender($to_admin_email, $primer_smtp_subject, $primer_smtp_message, $attachments);
+														}
+													}
+												}
+
+											}
+										}
+
+										if ( !empty($condition_client_email_send) && $condition_client_email_send == 'on' ) {
+
+											$mailResultSMTP = $primer_smtp->primer_mail_sender($user_order_email, $primer_smtp_subject, $primer_smtp_message, $attachments);
+
+											if (!empty($mailResultSMTP['error'])) {
+												update_post_meta($receipt_log_automation_id, 'receipt_log_automation_email', 'not_sent');
+												update_post_meta($receipt_log_automation_id, 'receipt_log_automation_email_error', $GLOBALS['phpmailer']->ErrorInfo);
+												update_post_meta($receipt_log_automation_id, 'receipt_log_automation_total_status', 'only_errors');
+											} else {
+												update_post_meta($receipt_log_automation_id, 'receipt_log_automation_email', 'sent');
+												update_post_meta($receipt_log_automation_id, 'receipt_log_automation_total_status', 'only_issued');
+											}
+
+											update_post_meta($post_id, 'exist_error_log', 'exist_log');
+
+										}
+									}
+								}
+							}
+
+						}
+					}
+				}
+			}
+
+		}
+
+	}
+
+	public function intervals($schedules) {
+		$schedules['fiveminutes'] = array('interval' => 300, 'display' => __('5 minutes', 'primer'));
+		$schedules['tenminutes'] = array('interval' => 600, 'display' => __('10 minutes', 'primer'));
+		$schedules['thirtyminutes'] = array('interval' => 1800, 'display' => __('30 minutes', 'primer'));
+		return $schedules;
 	}
 
 }

@@ -36,3 +36,19 @@ if ( ! function_exists( 'primer_get_receipt_log_label_plural' ) ) :
 		return apply_filters( 'primer_get_receipt_log_label_plural', $label );
 	}
 endif;
+
+if ( ! function_exists( 'primer_get_receipt_log_automation_label' ) ) :
+	function primer_get_receipt_log_automation_label() {
+		$translate = get_option( 'primer_translate' );
+		$label = isset( $translate['receipt-log-automation-label'] ) ? $translate['receipt-log-automation-label'] : __( 'Automation Log', 'primer');
+		return apply_filters( 'primer_get_receipt_log_automation_label', $label );
+	}
+endif;
+
+if ( ! function_exists( 'primer_get_receipt_log_automation_label_plural' ) ) :
+	function primer_get_receipt_log_automation_label_plural() {
+		$translate = get_option( 'primer_translate' );
+		$label = isset( $translate['receipt-log-automation-label-plural'] ) ? $translate['receipt-log-automation-label-plural'] : __( 'Automation Logs', 'primer');
+		return apply_filters( 'primer_get_receipt_log_automation_label_plural', $label );
+	}
+endif;

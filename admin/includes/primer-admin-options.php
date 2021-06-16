@@ -547,6 +547,8 @@ class Primer_Options {
 			'id'	=> 'activation_automation',
 		);
 
+		$output_link = admin_url( 'admin.php?action=convert_order_to_invoice' );
+
 		$this->option_metabox[] = apply_filters( 'primer_automation_option_fields', array(
 			'id'			=> $prefix . 'automation',
 			'title'			=> __( 'Automation Settings', 'primer' ),
@@ -573,18 +575,18 @@ class Primer_Options {
 							'type'       => 'select',
 							'options'	=> $this->get_status_of_orders(),
 						),
-						array(
+						/*array(
 							'name'       => __( 'And payment state is ', 'primer' ),
 							'id'         => 'receipt_payment_states',
 							'type'       => 'select',
 							'options'	=> array(
 								'' => __('Get payment states from', 'primer')
 							)
-						),
+						),*/
 						array(
 							'name' 	=> __('Send email to client', 'primer'),
 							'id'	=> 'client_email_send',
-							'type'	=> 'checkbox'
+							'type'	=> 'checkbox',
 						)
 					)
 				),
@@ -594,17 +596,29 @@ class Primer_Options {
 					'id'	=> 'automation_duration',
 					'type' => 'select',
 					'options' => array(
-							'' => __('5 minutes', 'primer'),
-							'0' => __('10 minutes', 'primer'),
+							'fiveminutes' => __('5 minutes', 'primer'),
+							'tenminutes' => __('10 minutes', 'primer'),
+							'thirtyminutes' => __('30 minutes', 'primer'),
+							'hourly' => __('60 minutes', 'primer'),
+							'daily' => __('Once per day', 'primer'),
 					),
-					'after_field' => __('In order for automation to work, your server needs to support cron.', 'primer')
+					'attributes' => array(
+						'data-conditional-id' => 'activation_automation',
+						'data-conditional-value' => 'on',
+					),
+					'after_field' => __('In order for automation to work, your server needs to support cron. ', 'primer') . $this->check_wp_cron_enabled(),
 				),
 
 				array(
 					'name' => __('Run Automation on orders issued after: ', 'primer'),
 					'id' => 'calendar_date_timestamp',
 					'type' => 'text_date',
-					'after_field' => __('Warning, the older the date, the heavier is the load for your server. If you get frequent timeouts, try using a more recent date.', 'primer')
+					'date_format' => 'Y-m-d',
+					'after_field' => __('Warning, the older the date, the heavier is the load for your server. If you get frequent timeouts, try using a more recent date.', 'primer'),
+					'attributes' => array(
+						'data-conditional-id' => 'activation_automation',
+						'data-conditional-value' => 'on',
+					),
 				),
 
 				array(
@@ -612,6 +626,10 @@ class Primer_Options {
 					'desc' => '',
 					'type'	=> 'checkbox',
 					'id'	=> 'send_email_to_admin',
+					'attributes' => array(
+						'data-conditional-id' => 'activation_automation',
+						'data-conditional-value' => 'on',
+					),
 				),
 
 				array(
@@ -619,6 +637,10 @@ class Primer_Options {
 					'desc' => __('(use comma (,) without spaces for multiple emails)', 'primer'),
 					'type'	=> 'text',
 					'id'	=> 'admin_email',
+					'attributes' => array(
+						'data-conditional-id' => 'activation_automation',
+						'data-conditional-value' => 'on',
+					),
 				),
 
 				array(
@@ -626,6 +648,10 @@ class Primer_Options {
 					'desc' => '',
 					'type'	=> 'checkbox',
 					'id'	=> 'send_successful_log',
+					'attributes' => array(
+						'data-conditional-id' => 'activation_automation',
+						'data-conditional-value' => 'on',
+					),
 				),
 
 				array(
@@ -633,6 +659,10 @@ class Primer_Options {
 					'desc' => '',
 					'type'	=> 'checkbox',
 					'id'	=> 'send_failed_log',
+					'attributes' => array(
+						'data-conditional-id' => 'activation_automation',
+						'data-conditional-value' => 'on',
+					),
 				),
 
 				array(
@@ -640,6 +670,10 @@ class Primer_Options {
 					'desc' => '',
 					'type'	=> 'text',
 					'id'	=> 'email_subject',
+					'attributes' => array(
+						'data-conditional-id' => 'activation_automation',
+						'data-conditional-value' => 'on',
+					),
 				),
 
 				array(
@@ -655,7 +689,7 @@ class Primer_Options {
 					'desc' => '',
 					'type'	=> 'button',
 					'id'	=> 'run_now_button',
-					'after' => '<button type="button" class="button">Run Now</button>'
+					'after' => '<a href="'.esc_url($output_link, 'convert', 'primer_convert_order').'" type="button" class="button">Run Now</a>'
 				),
 
 
@@ -681,6 +715,16 @@ class Primer_Options {
 
 		return $this->option_metabox;
 
+	}
+
+	public function check_wp_cron_enabled() {
+		$cron_status = '';
+		if (defined( 'DISABLE_WP_CRON' ) && DISABLE_WP_CRON === true ) {
+			$cron_status = __('DISABLED', 'primer');
+		} else {
+			$cron_status = __( 'ENABLED - OK', 'primer' );
+		}
+		return $cron_status;
 	}
 
 	/**

@@ -34,9 +34,11 @@ class PrimerReceiptList {
 
 				$receipt_in_log = '';
 				$receipt_log_status = get_post_meta(get_the_ID(), 'exist_error_log', true);
-				if (!empty($receipt_log_status)) {
+				/*if (!empty($receipt_log_status)) {
 					$receipt_in_log = __('Log', 'primer');
-				}
+				}*/
+
+				$receipt_in_log = __('Log', 'primer');
 
 				$order_from_invoice = get_post_meta(get_the_ID(), 'order_id_to_receipt', true);
 

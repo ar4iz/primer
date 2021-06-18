@@ -129,6 +129,13 @@ function primer_display_issuer_product() {
 	$discount = $order->get_discount_total();
 	$total_tax = $order->get_total_tax();
 
+	$get_taxes = array();
+
+	$tax_classes   = WC_Tax::get_tax_classes(); // Retrieve all tax classes.
+	if ( ! in_array( '', $tax_classes ) ) { // Make sure "Standard rate" (empty class name) is present.
+		array_unshift( $tax_classes, '' );
+	}
+	$inside_tax_rate = '';
 
 	foreach ( $order->get_items() as $item_id => $item ) {
 		$issuer_product .= '<tr class="products">';
@@ -168,6 +175,18 @@ function primer_display_issuer_product() {
 		$price_excl_tax = wc_get_price_excluding_tax( $product_instance ); // price without VAT
 		$price_incl_tax = wc_get_price_including_tax( $product_instance );  // price with VAT
 
+		$product_tax_class = $product_instance->get_tax_class();
+
+		$taxes = WC_Tax::get_rates_for_tax_class( $product_tax_class );
+
+		$tax_arr = json_decode(json_encode($taxes), true);
+		foreach ( $tax_arr as $tax ) {
+			if ($product_tax_class == $tax['tax_rate_class']) {
+				$inside_tax_rate = $tax['tax_rate'];
+			}
+		}
+		$inside_tax_rate = round($inside_tax_rate);
+
 		$subtotal_order_payment = $item->get_subtotal();
 
 		$subtotal_item_tax = $item->get_subtotal_tax();
@@ -178,14 +197,12 @@ function primer_display_issuer_product() {
 			$percent = (($subtotal_item_tax / $quantity) / $price_excl_tax ) * 100;
 		}
 
-//		$percent = (($total_tax / $quantity) / $price_excl_tax) * 100;
-
 		$total_order_payment = $item->get_total();
 
 		$total_order_item = $total_order_payment + $subtotal_item_tax;
 
 
-		$issuer_product .= '<td><span class="item_vat">'.$percent.'</span></td>';
+		$issuer_product .= '<td><span class="item_vat">'.$inside_tax_rate.'</span></td>';
 
 		$issuer_product .= '<td><span class="item_price_novat">'.$subtotal_order_payment.'</span></td>';
 

@@ -219,6 +219,7 @@ class Primer {
 		$this->loader->add_action('manage_shop_order_posts_custom_column', $plugin_admin, 'primer_icon_to_order_notes_column', 15, 1);
 
 		$this->loader->add_action( 'woocommerce_thankyou', $plugin_admin,'primer_checkout_save_user_meta' );
+		$this->loader->add_action( 'woocommerce_thankyou', $plugin_admin,'primer_checkout_create_user' );
 
 
 		$this->loader->add_filter( 'admin_notices', $plugin_admin, 'custom_admin_notices' );

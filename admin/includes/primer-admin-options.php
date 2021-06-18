@@ -548,8 +548,6 @@ class Primer_Options {
 			'id'	=> 'activation_automation',
 		);
 
-		$output_link = admin_url( 'admin.php?action=convert_order_to_invoice' );
-
 		$this->option_metabox[] = apply_filters( 'primer_automation_option_fields', array(
 			'id'			=> $prefix . 'automation',
 			'title'			=> __( 'Automation Settings', 'primer' ),

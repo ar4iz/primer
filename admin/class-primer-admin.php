@@ -773,6 +773,59 @@ class Primer_Admin {
 		}
 	}
 
+	public function primer_checkout_create_user( $order_id ) {
+		$order = wc_get_order( $order_id );
+		//get the user email from the order
+		$order_email = $order->get_billing_email();
+		// check if there are any users with the billing email as user or email
+		$email = email_exists( $order_email );
+		$user = username_exists( $order_email );
+
+		if( $user == false && $email == false ) {
+			// random password with 12 chars
+			$random_password = wp_generate_password();
+			// create new user with email as username & newly created pw
+			$user_id = wp_create_user( $order_email, $random_password, $order_email );
+			if ( is_wp_error( $user_id ) ) {
+				echo $user_id->get_error_message();
+			} else {
+				$billing_vat = get_post_meta($order->get_id(), '_billing_vat', true);
+				$billing_store = get_post_meta($order->get_id(), '_billing_store', true);
+				$billing_doy = get_post_meta($order->get_id(), '_billing_doy', true);
+
+				$u = new WP_User($user_id);
+				$u->remove_role('subscriber');
+				$u->add_role('customer');
+
+				update_user_meta( $user_id, 'billing_address_1', $order->get_billing_address_1() );
+				update_user_meta( $user_id, 'billing_address_2', $order->get_billing_address_2() );
+				update_user_meta( $user_id, 'billing_city', $order->get_billing_city() );
+				update_user_meta( $user_id, 'billing_company', $order->get_billing_company() );
+				update_user_meta( $user_id, 'billing_country', $order->get_billing_country() );
+				update_user_meta( $user_id, 'billing_email', $order->get_billing_email() );
+				update_user_meta( $user_id, 'billing_first_name', $order->get_billing_first_name() );
+				update_user_meta( $user_id, 'billing_last_name', $order->get_billing_last_name() );
+				update_user_meta( $user_id, 'billing_phone', $order->get_billing_phone() );
+				update_user_meta( $user_id, 'billing_postcode', $order->get_billing_postcode() );
+
+				if (!empty($billing_vat)) {
+					update_user_meta( $user_id, 'billing_vat', $billing_vat );
+				}
+				if (!empty($billing_store)) {
+					update_user_meta( $user_id, 'billing_store', $billing_store );
+				}
+				if (!empty($billing_doy)) {
+					update_user_meta( $user_id, 'billing_doy', $billing_doy );
+				}
+				$doy = get_post_meta($order_id, '_billing_doy', true);
+				$doy_value = primer_return_doy_args()[$doy];
+				if (!empty($doy_value)) {
+					update_user_meta( $user_id, 'billing_doy_name', $doy_value );
+				}
+			}
+		}
+	}
+
 
 	/**
 	 * Trigger notices for any issues with settings, etc.

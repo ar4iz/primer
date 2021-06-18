@@ -120,6 +120,8 @@ class Primer {
 			require_once PRIMER_PATH . 'admin/includes/primer-admin-metaboxes.php';
 		}
 
+		require_once PRIMER_PATH . 'includes/class-primer-cron.php';
+
 		require_once PRIMER_PATH . 'includes/class-primer-settings.php';
 		require_once PRIMER_PATH . 'includes/vendor/cmb2/init.php';
 
@@ -221,16 +223,15 @@ class Primer {
 
 		$this->loader->add_filter( 'admin_notices', $plugin_admin, 'custom_admin_notices' );
 
-		$this->loader->add_action( 'primer_receipts_hourly_tasks', $plugin_admin, 'primer_receipts_hourly_tasks' );
-
-		$this->loader->add_action( 'primer_cron_process', $plugin_admin, 'convert_order_to_invoice', 10 );
-
 		$this->loader->add_filter('cron_schedules', $plugin_admin, 'intervals');
+
 
 		add_action('cmb2_save_field', function ($field_id, $updated, $action, $field) {
 			if ($field_id == 'activation_automation') {
-				$plugin_admin = new Primer_Admin( $this->get_plugin_name(), $this->get_version() );
-				$plugin_admin->convert_order_to_invoice();
+				$automation_duration = $field->data_to_save['automation_duration'];
+				$next_timestamp = wp_next_scheduled( 'primer_cron_process' );
+				wp_unschedule_event( $next_timestamp, 'primer_cron_process');
+				wp_schedule_event( time(), $automation_duration, 'primer_cron_process' );
 			}
 		}, 10, 4);
 

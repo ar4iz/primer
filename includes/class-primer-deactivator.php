@@ -33,7 +33,7 @@ class Primer_Deactivator {
 	public static function deactivate() {
 
 		// Primer Recurring Tasks
-		wp_clear_scheduled_hook( 'primer_receipts_hourly_tasks' );
+		wp_clear_scheduled_hook( 'primer_cron_process' );
 
 		flush_rewrite_rules();
 	}

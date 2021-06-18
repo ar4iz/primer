@@ -26,15 +26,15 @@ class PrimerReceiptLogAutomation extends WP_List_Table {
 
 	function get_columns() {
 		return array(
-			'receipt_log_order_id'		=> __( 'Order No', 'primer' ),
-			'receipt_log_order_date' 	=> __( 'Order Date', 'primer' ),
-			'receipt_log_invoice_id'		=> __( 'Invoice No', 'primer' ),
-			'receipt_log_invoice_date' 	=> __( 'Invoice Date', 'primer' ),
-			'receipt_log_client'	=> __( 'Client', 'primer' ),
-			'receipt_log_status' => __( 'Issued receipt', 'primer' ),
-			'receipt_log_email'	=> __( 'Email Send', 'primer' ),
-			'receipt_log_error'	=> __( 'Receipt Error', 'primer' ),
-			'receipt_log_email_error' => __( 'Email error', 'primer' ),
+			'receipt_log_automation_order_id'		=> __( 'Order No', 'primer' ),
+			'receipt_log_automation_order_date' 	=> __( 'Order Date', 'primer' ),
+			'receipt_log_automation_invoice_id'		=> __( 'Invoice No', 'primer' ),
+			'receipt_log_automation_invoice_date' 	=> __( 'Invoice Date', 'primer' ),
+			'receipt_log_automation_client'	=> __( 'Client', 'primer' ),
+			'receipt_log_automation_status' => __( 'Issued receipt', 'primer' ),
+			'receipt_log_automation_email'	=> __( 'Email Send', 'primer' ),
+			'receipt_log_automation_error'	=> __( 'Receipt Error', 'primer' ),
+			'receipt_log_automation_email_error' => __( 'Email error', 'primer' ),
 		);
 	}
 
@@ -63,7 +63,7 @@ class PrimerReceiptLogAutomation extends WP_List_Table {
 
 	function extra_tablenav( $which ){
 		if ( $which !== 'bottom' ) {
-			$primer_receipts = new PrimerReceiptLogAutomationList();
+			$primer_receipts = new PrimerReceiptLogListAutomation();
 			?>
 			<div class="alignleft actions">
 				<h2><?php _e('Issue Receipts Report', 'primer'); ?></h2>
@@ -190,7 +190,7 @@ class PrimerReceiptLogAutomation extends WP_List_Table {
 
 		$per_page = 20;
 
-		$get_total_receipts_logs = new PrimerReceiptLogAutomationList();
+		$get_total_receipts_logs = new PrimerReceiptLogListAutomation();
 
 
 		if ((isset($_GET['only_errors']) || isset($_GET['only_issued']))) {
@@ -260,8 +260,7 @@ class PrimerReceiptLogAutomation extends WP_List_Table {
 
 	}
 
-
-	function show_all_receipts_logs() {
+	function show_all_receipts_logs_automation() {
 		ob_start();
 		$status = filter_input( INPUT_GET, 'status' );
 		include_once PRIMER_PATH . 'views/admin_receipt_log_automation_list.php';

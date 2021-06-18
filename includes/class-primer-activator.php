@@ -74,11 +74,6 @@ class Primer_Activator {
 
 		flush_rewrite_rules();
 
-		// Primer Recurring Tasks
-		if ( ! wp_next_scheduled( 'primer_receipts_hourly_tasks' ) ) {
-			wp_schedule_event( time(), 'hourly', 'primer_receipts_hourly_tasks' );
-		}
-
 		// Done
 		do_action( 'primer_activated' );
 	}

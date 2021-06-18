@@ -62,11 +62,6 @@
 			create_form(email_fields);
 		});
 
-		/*$(document).on('click', '#test-email-form-submit', function () {
-			$('#email-test-form').submit();
-			return true;
-		});*/
-
 		function popupOpenClose(popup) {
 			if ($('.popup_wrapper').length == 0) {
 				$(popup).wrapInner("<div class='popup_wrapper'></div>")
@@ -291,6 +286,33 @@
 				this.value = $.trim(this.value);
 			})
 		}
+
+		$('#cron-execute-cron-task-now').on('click', function (e) {
+			e.preventDefault();
+			$(this).text('Loading...');
+
+			var data = {
+				'action': 'primer_fire_cron',
+			};
+
+			/*$.ajax({
+				url: ajaxurl,
+				data: data,
+				method: "POST",
+				success: function (response) {
+					console.log(response);
+				}
+			})*/
+
+			$.post( ajaxurl, data, function (response) {
+				if (response != "OK")
+					alert('Problems executing cron task: ' + response);
+				else {
+					alert('Cron task successfully executed');
+					document.location.reload();
+				}
+			} )
+		})
 
 	});
 

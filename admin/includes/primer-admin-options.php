@@ -94,6 +94,7 @@ class Primer_Options {
 		add_submenu_page('wp_ajax_list_order', __('Orders', 'primer'), __('Orders', 'primer'), 'manage_options', 'wp_ajax_list_order', array(&$this, "admin_page_display"));
 		add_submenu_page('wp_ajax_list_order', __('Receipts', 'primer'), __('Receipts', 'primer'), 'manage_options', 'primer_receipts', array(&$this, "admin_page_receipt_display"));
 		add_submenu_page(null, __('Receipts Logs', 'primer'), __('Receipts Logs', 'primer'), 'manage_options', 'primer_receipts_logs', array(&$this, "admin_page_receipt_log_display"));
+		add_submenu_page(null, __('Automation Logs', 'primer'), __('Automation Logs', 'primer'), 'manage_options', 'primer_receipts_logs_automation', array(&$this, "admin_page_receipt_log_automation_display"));
 		add_submenu_page('wp_ajax_list_order', __('Settings', 'primer'), __('Settings', 'primer'), 'manage_options', 'primer_settings', array(&$this, "admin_settings_page_display"));
 
 		add_submenu_page('wp_ajax_list_order', __('Export', 'primer'), __('Export', 'primer'), 'manage_options', 'primer_export', array(&$this, "admin_settings_page_display"));
@@ -681,7 +682,7 @@ class Primer_Options {
 					'desc' => '',
 					'type'	=> 'button',
 					'id'	=> 'log_button',
-					'after' => '<button type="button" class="button">Log</button>'
+					'after' => '<a href="' . admin_url('admin.php?page=primer_receipts_logs_automation') . '" target="_blank" class="button order-view">'.__('Log', 'primer').'</a>'
 				),
 
 				array(
@@ -689,7 +690,7 @@ class Primer_Options {
 					'desc' => '',
 					'type'	=> 'button',
 					'id'	=> 'run_now_button',
-					'after' => '<a href="'.esc_url($output_link, 'convert', 'primer_convert_order').'" type="button" class="button">Run Now</a>'
+					'after' => '<a href="#" class="button" id="cron-execute-cron-task-now">'.__('Run Now', 'primer').'</a>'
 				),
 
 
@@ -875,6 +876,12 @@ class Primer_Options {
 	public function admin_page_receipt_log_display() {
 		include_once(PRIMER_PATH . 'admin/includes/primer-admin-receipt-log-table.php');
 		$primer_receipt = new PrimerReceiptLog();
+		$primer_receipt->handle_main_primer_receipt_admin_menu();
+	}
+
+	public function admin_page_receipt_log_automation_display() {
+		include_once(PRIMER_PATH . 'admin/includes/primer-admin-receipt-log-automation-table.php');
+		$primer_receipt = new PrimerReceiptLogAutomation();
 		$primer_receipt->handle_main_primer_receipt_admin_menu();
 	}
 

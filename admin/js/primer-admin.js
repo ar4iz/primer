@@ -280,6 +280,17 @@
 					$('#primer_automation').append(popup_data)
 					popupOpenClose('.primer_popup');
 				}
+
+				var send_admin_check = $('input[name="send_email_to_admin"]');
+				if (send_admin_check.length && send_admin_check.prop('checked')) {
+					var suc_check = $('input[name="send_successful_log"]');
+					var fail_check = $('input[name="send_failed_log"]');
+					if ((suc_check.prop('checked') === false) && (fail_check.prop('checked') === false)) {
+						var popup_data_check = '<div class="primer_popup popup_error"><h3>Send email to admin is active-please select one option from “send successful receipts log” or “send failed receipts log” to continue</h3></div>';
+						$('#primer_automation').append(popup_data_check)
+						popupOpenClose('.primer_popup');
+					}
+				}
 			});
 
 			$(document).on('input', 'input[name="admin_email"]', function () {
@@ -305,9 +316,10 @@
 			})*/
 
 			$.post( ajaxurl, data, function (response) {
-				if (response != "OK")
+				if (response != "OK") {
 					alert('Problems executing cron task: ' + response);
-				else {
+					document.location.reload();
+				} else {
 					alert('Cron task successfully executed');
 					document.location.reload();
 				}

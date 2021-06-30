@@ -207,25 +207,39 @@ class Primer {
 		$this->loader->add_filter('woocommerce_customer_meta_fields', $plugin_admin, 'primer_add_woocommerce_customer_meta_fields');
 		$this->loader->add_filter('woocommerce_order_formatted_billing_address', $plugin_admin, 'primer_add_woocommerce_order_fields', 10, 2);
 		$this->loader->add_filter('woocommerce_formatted_address_replacements', $plugin_admin, 'primer_add_woocommerce_formatted_address_replacements', 10, 2);
-		$this->loader->add_filter('woocommerce_billing_fields', $plugin_admin, 'primer_add_woocommerce_billing_fields');
+//		$this->loader->add_filter('woocommerce_billing_fields', $plugin_admin, 'primer_add_woocommerce_billing_fields');
 		$this->loader->add_filter('woocommerce_checkout_fields', $plugin_admin, 'primer_remove_woocommerce_shipping_fields');
 
 		$this->loader->add_filter( 'default_checkout_shipping_country', $plugin_admin, 'primer_set_shipping_country' );
-
 
 		$this->loader->add_filter( 'woocommerce_order_data_store_cpt_get_orders_query', $plugin_admin, 'handle_custom_query_var', 1, 3 );
 
 		$this->loader->add_action('woocommerce_checkout_process', $plugin_admin, 'primer_checkout_field_process');
 		$this->loader->add_action('manage_shop_order_posts_custom_column', $plugin_admin, 'primer_icon_to_order_notes_column', 15, 1);
 
-		$this->loader->add_action( 'woocommerce_thankyou', $plugin_admin,'primer_checkout_save_user_meta' );
-		$this->loader->add_action( 'woocommerce_thankyou', $plugin_admin,'primer_checkout_create_user' );
-
 
 		$this->loader->add_filter( 'admin_notices', $plugin_admin, 'custom_admin_notices' );
 
 		$this->loader->add_filter('cron_schedules', $plugin_admin, 'intervals');
 
+		$general_settings = get_option('primer_generals');
+		if ( isset( $general_settings['primer_create_user_on_checkout'] ) && $general_settings['primer_create_user_on_checkout'] == 'on' ) {
+			$this->loader->add_action( 'woocommerce_thankyou', $plugin_admin,'primer_checkout_save_user_meta' );
+			$this->loader->add_action( 'woocommerce_thankyou', $plugin_admin,'primer_checkout_create_user' );
+			$this->loader->add_action( 'woocommerce_new_order', $plugin_admin, 'primer_checkout_save_user_meta', 10, 1 );
+			$this->loader->add_action( 'woocommerce_new_order', $plugin_admin, 'primer_checkout_create_user', 10, 1 );
+		} else {
+			remove_action( 'woocommerce_thankyou', array($plugin_admin, 'primer_checkout_save_user_meta') );
+			remove_action( 'woocommerce_new_order', array($plugin_admin, 'primer_checkout_save_user_meta') );
+			remove_action( 'woocommerce_thankyou', array($plugin_admin, 'primer_checkout_create_user') );
+			remove_action( 'woocommerce_new_order', array($plugin_admin, 'primer_checkout_create_user') );
+		}
+
+		if ( isset($general_settings['primer_enable_invoice_in_checkout'] ) && $general_settings['primer_enable_invoice_in_checkout'] == 'on' ) {
+			$this->loader->add_filter('woocommerce_billing_fields', $plugin_admin, 'primer_add_woocommerce_billing_fields');
+		} else {
+			remove_filter('woocommerce_billing_fields', array($plugin_admin, 'primer_add_woocommerce_billing_fields'));
+		}
 
 		add_action('cmb2_save_field', function ($field_id, $updated, $action, $field) {
 			if ($field_id == 'activation_automation') {
@@ -235,6 +249,17 @@ class Primer {
 				wp_schedule_event( time(), $automation_duration, 'primer_cron_process' );
 			}
 		}, 10, 4);
+
+
+		$automation_options = get_option('primer_automation');
+		if (!empty($automation_options) && !empty($automation_options['activation_automation'])) {
+			$check_automation_options = $automation_options['activation_automation'];
+			if (empty($check_automation_options) || $check_automation_options !== 'on') {
+				$next_timestamp = wp_next_scheduled( 'primer_cron_process' );
+				wp_clear_scheduled_hook( 'primer_cron_process' );
+				wp_unschedule_event( $next_timestamp, 'primer_cron_process');
+			}
+		}
 
 //		$this->loader->add_action('cmb2_save_page_fields_primer_automation', $plugin_admin, 'convert_order_to_invoice', 10);
 

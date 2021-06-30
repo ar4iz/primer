@@ -330,9 +330,10 @@ class PrimerSMTP {
 			$mail->ContentType = 'text/html';
 			$mail->IsHTML( true );
 
+			$mail->SMTPAuth = true;
 			/* If using smtp auth, set the username & password */
 			if ( 'yes' === $this->opts['smtp_settings']['authentication'] || 'yes' === $_POST['primer_smtp_authentication'] ) {
-				$mail->SMTPAuth = true;
+
 				$request_username = isset($_POST['primer_smtp_username']) ? $_POST['primer_smtp_username'] : '';
 				if (!empty($this->opts['smtp_settings']['username'])) {
 					$mail->Username = $this->opts['smtp_settings']['username'];

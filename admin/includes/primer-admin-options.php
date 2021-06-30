@@ -101,6 +101,8 @@ class Primer_Options {
 
 		$this->options_pages[] = add_submenu_page('wp_ajax_list_order', __('License and General Settings', 'primer'), __('License and General Settings', 'primer'), 'manage_options', 'primer_licenses', array(&$this, "admin_settings_page_display"));
 
+		$this->options_pages[] = add_submenu_page(null, $this->menu_title, 'General Settings', 'manage_options', 'primer_generals', array( $this, 'admin_settings_page_display' ));
+
 		$this->options_pages[] = add_submenu_page( null,  $this->menu_title, 'MyData Settings', 'manage_options', 'primer_mydata', array( $this, 'admin_settings_page_display' ));
 		$this->options_pages[] = add_submenu_page( null,  $this->menu_title, 'Automation Settings', 'manage_options', 'primer_automation', array( $this, 'admin_settings_page_display' ));
 		$this->options_pages[] = add_submenu_page( null,  $this->menu_title, 'Email Settings', 'manage_options', 'primer_email', array( $this, 'admin_settings_page_display' ));
@@ -191,6 +193,47 @@ class Primer_Options {
 
 		$prefix = 'primer_';
 		$current_user = wp_get_current_user();
+
+		$this->option_metabox[] = apply_filters( 'primer_generals_option_fields', array(
+			'id'			=> $prefix . 'generals',
+			'title'			=> __( 'General Settings', 'primer' ),
+			'menu_title'	=> __( 'General Settings', 'primer' ),
+			'desc'			=> '',
+			'show_on'    	=> array( 'key' => 'options-page', 'value' => array( 'generals' ), ),
+			'show_names' 	=> true,
+			'fields'		=> array(
+				array(
+					'name'		=> __( 'General Settings', 'primer' ),
+					'desc'		=> '',
+					'default'	=> '',
+					'id'		=> 'title_generals_settings',
+					'type'		=> 'title',
+				),
+				array(
+					'name'		=> __( 'Enable receipt/invoice option in checkout', 'primer' ),
+					'desc'      => __( 'Enables the receipt/invoice option on checkout', 'primer' ),
+					'id'		=> 'primer_enable_invoice_in_checkout',
+					'type'		=> 'radio_inline',
+					'show_option_none' => false,
+					'options' 	=> array(
+						'off'	=> __('Hide', 'primer'),
+						'on'	=> __('Show', 'primer'),
+					),
+					'default' => 'off'
+				),
+				array(
+					'name'		=> __( 'Create/update new user on checkout', 'primer' ),
+					'desc'      => __( 'Enables the receipt/invoice option on checkout', 'primer' ),
+					'id'		=> 'primer_create_user_on_checkout',
+					'type'		=> 'radio_inline',
+					'options' 	=> array(
+						'off'	=> __('Off', 'primer'),
+						'on'	=> __('On', 'primer'),
+					),
+					'default' 	=> 'off',
+				),
+			)
+		) );
 
 		$this->option_metabox[] = apply_filters( 'primer_mydata_option_fields', array(
 			'id'			=> $prefix . 'mydata',

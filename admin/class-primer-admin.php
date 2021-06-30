@@ -766,6 +766,33 @@ class Primer_Admin {
 		if ( $order->get_billing_last_name() ) {
 			update_user_meta( $user_id, 'last_name', $order->get_billing_last_name() );
 		}
+		if ( $order->get_billing_email() ) {
+			update_user_meta( $user_id, 'user_email', $order->get_billing_email() );
+		}
+		update_user_meta( $user_id, 'billing_address_1', $order->get_billing_address_1() );
+		update_user_meta( $user_id, 'billing_address_2', $order->get_billing_address_2() );
+		update_user_meta( $user_id, 'billing_city', $order->get_billing_city() );
+		update_user_meta( $user_id, 'billing_company', $order->get_billing_company() );
+		update_user_meta( $user_id, 'billing_country', $order->get_billing_country() );
+		update_user_meta( $user_id, 'billing_first_name', $order->get_billing_first_name() );
+		update_user_meta( $user_id, 'billing_last_name', $order->get_billing_last_name() );
+		update_user_meta( $user_id, 'billing_email', $order->get_billing_email() );
+		update_user_meta( $user_id, 'billing_phone', $order->get_billing_phone() );
+		update_user_meta( $user_id, 'billing_postcode', $order->get_billing_postcode() );
+
+		$billing_vat = get_post_meta($order->get_id(), '_billing_vat', true);
+		$billing_store = get_post_meta($order->get_id(), '_billing_store', true);
+		$billing_doy = get_post_meta($order->get_id(), '_billing_doy', true);
+
+		if (!empty($billing_vat)) {
+			update_user_meta( $user_id, 'billing_vat', $billing_vat );
+		}
+		if (!empty($billing_store)) {
+			update_user_meta( $user_id, 'billing_store', $billing_store );
+		}
+		if (!empty($billing_doy)) {
+			update_user_meta( $user_id, 'billing_doy', $billing_doy );
+		}
 		$doy = get_post_meta($order_id, '_billing_doy', true);
 		$doy_value = primer_return_doy_args()[$doy];
 		if (!empty($doy_value)) {
@@ -797,6 +824,9 @@ class Primer_Admin {
 				$u->remove_role('subscriber');
 				$u->add_role('customer');
 
+				update_post_meta( $order_id, '_customer_user', $user_id );
+				update_user_meta( $user_id, 'first_name', $order->get_billing_first_name() );
+				update_user_meta( $user_id, 'last_name', $order->get_billing_last_name() );
 				update_user_meta( $user_id, 'billing_address_1', $order->get_billing_address_1() );
 				update_user_meta( $user_id, 'billing_address_2', $order->get_billing_address_2() );
 				update_user_meta( $user_id, 'billing_city', $order->get_billing_city() );

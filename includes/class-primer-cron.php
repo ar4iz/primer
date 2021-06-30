@@ -43,7 +43,11 @@ class PrimerCron {
 	public function convert_order_to_invoice() {
 		global $wpdb, $woocommerce;
 
+		$log_ids = array();
+
 		$LOG = '';
+
+		$LOG .="cron started "."\n";
 
 		$receipt_log_automation_value = '';
 
@@ -224,8 +228,9 @@ class PrimerCron {
 											$primer_smtp_options = get_option('primer_emails');
 
 											$headers = 'From: ' . $primer_smtp_options['from_email_field'] ? $primer_smtp_options['from_email_field'] : 'Primer '. get_bloginfo('admin_email');
-											if (!empty($automation_options['email_subject'])) {
-												$primer_smtp_subject = $automation_options['email_subject'];
+
+											if (!empty($primer_smtp_options['email_subject'])) {
+												$primer_smtp_subject = $primer_smtp_options['email_subject'];
 											} else {
 												$primer_smtp_subject = __('Test email subject', 'primer');
 											}
@@ -264,30 +269,13 @@ class PrimerCron {
 
 												update_post_meta($receipt_log_automation_id, 'receipt_log_automation_status', $get_issue_status);
 												update_post_meta($receipt_log_automation_id, 'receipt_log_automation_error', $receipt_log_automation_value);
+
+												$log_ids[] = $receipt_log_automation_id;
 											}
 
 
 											$mailResult = false;
 											$primer_smtp = PrimerSMTP::get_instance();
-
-											$check_send_email = $automation_options['send_email_to_admin'];
-											if (!empty($check_send_email)) {
-												if ($check_send_email == 'on') {
-													$automation_admin_emails = $automation_options['admin_email'];
-													if (!empty($automation_admin_emails)) {
-														$admin_emails = explode(',', $automation_admin_emails);
-														foreach ( $admin_emails as $admin_email ) {
-															$emails[] = trim( sanitize_email($admin_email) );
-														}
-														if (!empty($emails)) {
-															foreach ( $emails as $to_admin_email ) {
-																$mailResultSMTP = $primer_smtp->primer_mail_sender($to_admin_email, $primer_smtp_subject, $primer_smtp_message, $attachments);
-															}
-														}
-													}
-
-												}
-											}
 
 											if ( !empty($condition_client_email_send) && $condition_client_email_send == 'on' ) {
 
@@ -361,8 +349,9 @@ class PrimerCron {
 											$primer_smtp_options = get_option('primer_emails');
 
 											$headers = 'From: ' . $primer_smtp_options['from_email_field'] ? $primer_smtp_options['from_email_field'] : 'Primer '. get_bloginfo('admin_email');
-											if (!empty($automation_options['email_subject'])) {
-												$primer_smtp_subject = $automation_options['email_subject'];
+
+											if (!empty($primer_smtp_options['email_subject'])) {
+												$primer_smtp_subject = $primer_smtp_options['email_subject'];
 											} else {
 												$primer_smtp_subject = __('Test email subject', 'primer');
 											}
@@ -401,25 +390,6 @@ class PrimerCron {
 
 											$mailResult = false;
 											$primer_smtp = PrimerSMTP::get_instance();
-
-											$check_send_email = $automation_options['send_email_to_admin'];
-											if (!empty($check_send_email)) {
-												if ($check_send_email == 'on') {
-													$automation_admin_emails = $automation_options['admin_email'];
-													if (!empty($automation_admin_emails)) {
-														$admin_emails = explode(',', $automation_admin_emails);
-														foreach ( $admin_emails as $admin_email ) {
-															$emails[] = trim( sanitize_email($admin_email) );
-														}
-														if (!empty($emails)) {
-															foreach ( $emails as $to_admin_email ) {
-																$mailResultSMTP = $primer_smtp->primer_mail_sender($to_admin_email, $primer_smtp_subject, $primer_smtp_message, $attachments);
-															}
-														}
-													}
-
-												}
-											}
 
 											if ( !empty($condition_client_email_send) && $condition_client_email_send == 'on' ) {
 
@@ -491,6 +461,7 @@ class PrimerCron {
 												}
 
 												update_post_meta($receipt_log_automation_id, 'receipt_log_automation_status', $get_issue_status);
+												$log_ids[] = $receipt_log_automation_id;
 											}
 
 											update_post_meta($receipt_log_automation_id, 'receipt_log_automation_email', 'not_sent');
@@ -527,7 +498,7 @@ class PrimerCron {
 				$primer_send_fail_log = $automation_options['send_failed_log'];
 			}
 
-			$this->export_csv_log($primer_send_success_log, $primer_send_fail_log);
+			$this->export_csv_log($log_ids, $primer_send_success_log, $primer_send_fail_log);
 
 		}
 
@@ -567,7 +538,7 @@ class PrimerCron {
 		header("Content-Transfer-Encoding: binary");
 	}
 
-	public function export_csv_log($log_successful, $log_failed) {
+	public function export_csv_log($log_ids, $log_successful, $log_failed) {
 		global $wpdb;
 
 		$post_type = 'pr_log_automation';
@@ -584,6 +555,10 @@ class PrimerCron {
 			'posts_per_page'=> -1,
 			'post_status'   => 'publish',
 		);
+
+		if(!empty($log_ids)) {
+			$args['post__in'] = $log_ids;
+		}
 
 		if (!empty($log_successful)) {
 			$meta_values['receipt_log_automation_total_status'][] = 'only_issued';
@@ -770,7 +745,7 @@ class PrimerCron {
 						foreach ( $admin_emails as $admin_email ) {
 							$emails[] = trim( sanitize_email($admin_email) );
 						}
-						if (!empty($emails)) {
+						if (!empty($emails) && !empty($log_ids)) {
 							foreach ( $emails as $to_admin_email ) {
 								$mailResultSMTP = $primer_smtp->primer_mail_sender($to_admin_email, $primer_smtp_subject, 'automation log', $csv_dir_file);
 							}

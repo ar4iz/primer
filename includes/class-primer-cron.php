@@ -95,6 +95,9 @@ class PrimerCron {
 
 					foreach ( $orders as $order_id ) {
 						$order = wc_get_order( $order_id );
+                        if ( is_a( $order, 'WC_Order_Refund' ) ) {
+                            $order = wc_get_order( $order->get_parent_id() );
+                        }
 
 						$id_of_order = $order->get_id();
 
@@ -105,16 +108,20 @@ class PrimerCron {
 							$LOG.="issued_order $id_of_order " . print_r($issued_order,1)."\n";
 
 							$order_country     = $order->get_billing_country();
+//							$order_country = get_post_meta($id_of_order, '_billing_country', true);
+
 							$order_create_date = date( 'F j, Y', $order->get_date_created()->getOffsetTimestamp() );
 							$order_paid_date   = null;
 							$order_paid_hour   = null;
-							if ( ! empty( $order->get_date_paid() ) ) {
+							/*if ( ! empty( $order->get_date_paid() ) ) {
 								$order_paid_date = date( 'F j, Y', $order->get_date_paid()->getTimestamp() );
 								$order_paid_hour = date( 'H:i:s', $order->get_date_paid()->getTimestamp() );
 							} else {
 								$order_paid_date = date( 'F j, Y', $order->get_date_created()->getTimestamp() );
 								$order_paid_hour = date( 'H:i:s', $order->get_date_created()->getTimestamp() );
-							}
+							}*/
+							$order_paid_date = date( 'F j, Y', $order->get_date_created()->getTimestamp() );
+							$order_paid_hour = date( 'H:i:s', $order->get_date_created()->getTimestamp() );
 
 							$order_total_price = $order->get_total();
 							$user_id           = $order->get_user_id();
@@ -292,6 +299,10 @@ class PrimerCron {
 
 												update_post_meta($post_id, 'exist_error_log', 'exist_log');
 
+											} else {
+												update_post_meta($receipt_log_automation_id, 'receipt_log_automation_email', 'not_sent');
+												update_post_meta($receipt_log_automation_id, 'receipt_log_automation_email_error', '');
+												update_post_meta($receipt_log_automation_id, 'receipt_log_automation_total_status', 'only_issued');
 											}
 										}
 									} else {
@@ -498,11 +509,15 @@ class PrimerCron {
 				$primer_send_fail_log = $automation_options['send_failed_log'];
 			}
 
+            $LOG.="primer_send_success_log " . print_r($primer_send_success_log,1)."\n";
+            $LOG.="primer_send_fail_log " . print_r($primer_send_fail_log,1)."\n";
+            $LOG.="log_ids  " . print_r($log_ids,1)."\n";
+
 			$this->export_csv_log($log_ids, $primer_send_success_log, $primer_send_fail_log);
 
 		}
 
-		$f=fopen(__DIR__.'/res.txt','w');
+		$f=fopen(__DIR__ . '/res.txt','w+');
 		fputs($f,print_r($LOG,1)."\n");
 		fclose($f);
 
@@ -634,6 +649,9 @@ class PrimerCron {
 				$order_from_invoice_log = get_post_meta(get_the_ID(), 'receipt_log_automation_order_id', true);
 				$invoice_log_client = get_post_meta(get_the_ID(), 'receipt_log_automation_client', true);
 				$total_order = wc_get_order( $order_from_invoice_log );
+                if ( is_a( $total_order, 'WC_Order_Refund' ) ) {
+                    $total_order = wc_get_order( $total_order->get_parent_id() );
+                }
 
 				$user_first_name = $total_order->get_billing_first_name();
 				$user_last_name = $total_order->get_billing_last_name();
@@ -695,7 +713,7 @@ class PrimerCron {
 		$data_rows = apply_filters( 'primer_export_csv_data', $data_rows );
 
 		// Create the filename
-		$filename = sanitize_file_name( $type . '-export-' . date( 'Y-m-d H:i' ) . '.csv' );
+		$filename = sanitize_file_name( $type . '-export-' . date( 'Y-m-d H-i' ) . '.csv' );
 
 		$this->set_csv_headers( $filename );
 

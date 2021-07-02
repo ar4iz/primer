@@ -568,6 +568,10 @@ class Primer_Admin {
 				}
 			}
 		}
+
+		if ( email_exists( $_POST['billing_email'] ) && ! is_user_logged_in() ) {
+			wc_add_notice( __('User already exists with the specified email, please log in or choose another email', 'primer'), 'error' );
+		}
 	}
 
 	/**
@@ -769,6 +773,9 @@ class Primer_Admin {
 		if ( $order->get_billing_email() ) {
 			update_user_meta( $user_id, 'user_email', $order->get_billing_email() );
 		}
+
+		update_post_meta( $order_id, '_customer_user', $user_id );
+
 		update_user_meta( $user_id, 'billing_address_1', $order->get_billing_address_1() );
 		update_user_meta( $user_id, 'billing_address_2', $order->get_billing_address_2() );
 		update_user_meta( $user_id, 'billing_city', $order->get_billing_city() );
@@ -854,6 +861,7 @@ class Primer_Admin {
 				}
 			}
 		}
+
 	}
 
 

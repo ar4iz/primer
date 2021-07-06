@@ -117,6 +117,19 @@ class Primer_Admin {
 
 		}
 
+		if ( $screen->id == "primer-receipts_page_primer_settings" ) {
+			wp_enqueue_script('plupload');
+			wp_register_script('upload-js', PRIMER_URL . '/admin/js/upload.js', array('jquery', 'plupload'), PRIMER_VERSION, true);
+			$profile_data = array(
+				'url' => admin_url('admin-ajax.php'),
+				'upload_nonce' => wp_create_nonce('upload_nonce'),
+				'verify_file_type' => esc_html__('Valid file formats', 'primer'),
+				'site_url' => site_url(),
+			);
+			wp_localize_script('upload-js', 'ajax_object', $profile_data);
+			wp_enqueue_script('upload-js');
+		}
+
 	}
 
 	/**

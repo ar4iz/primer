@@ -480,6 +480,36 @@ function ajax_primer_display_callback() {
 add_action('wp_ajax_convert_select_orders', 'convert_select_orders');
 function convert_select_orders() {
 
+	$url = 'https://wp-mydataapi.ddns.net/v2/invoices/send';
+
+	$auth = base64_encode( 'user' . ':' . 'qwerty' );
+
+		$curl_args = array(
+			CURLOPT_URL => $url,
+			CURLOPT_RETURNTRANSFER => true,
+			CURLOPT_ENCODING => '',
+			CURLOPT_MAXREDIRS => 10,
+			CURLOPT_TIMEOUT => 60,
+			CURLOPT_FOLLOWLOCATION => true,
+			CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+			CURLOPT_CUSTOMREQUEST => 'POST',
+			CURLOPT_HTTPHEADER => array(
+				"Authorization: Basic $auth",
+				'Content-Type: application/json'
+			)
+		);
+
+		$curl = curl_init();
+
+		$invoice_data = array(
+			"invoice" => array(),
+		);
+
+	$invoiceType = '';
+
+	$post_ids = array();
+	$order_ids = array();
+
 	$orders = isset($_GET['orders']) ? $_GET['orders'] : '';
 
 	$response_data = '';
@@ -518,21 +548,31 @@ function convert_select_orders() {
 
 			$order_invoice_type = get_post_meta($id_of_order, '_billing_invoice_type', true);
 
+			$vat_number = get_post_meta($id_of_order, '_billing_vat', true);
+
 			$insert_taxonomy = 'receipt_status';
 			$invoice_term = '';
 
+			$invoice_data['invoice'][0]['issuer']['country'] = $order_country;
+
 			if ($order_invoice_type == 'receipt' && $order_country == 'GR') {
 				$invoice_term = 'greek_receipt';
+				$invoiceType = '11.1';
 			}
 			if ($order_invoice_type == 'receipt' && $order_country !== 'GR') {
 				$invoice_term = 'english_receipt';
+				$invoiceType = '11.1';
 			}
 			if ($order_invoice_type == 'invoice' && $order_country == 'GR') {
 				$invoice_term = 'greek_invoice';
+				$invoiceType = '1.1';
 			}
 			if ($order_invoice_type == 'invoice' && $order_country !== 'GR') {
 				$invoice_term = 'english_invoice';
+				$invoiceType = '1.2';
 			}
+
+			$invoice_data['invoice'][0]['issuer']['vatNumber'] = "800434990";
 
 			$user_data = $user_full_name ? $user_full_name : '';
 
@@ -549,160 +589,109 @@ function convert_select_orders() {
 			if ($currency == 'EUR') {
 				if ($tax != '0') {
 					$post_id = wp_insert_post(array(
-				'post_type' => 'primer_receipt',
-				'post_title' => 'Receipt for order #' . $id_of_order,
-				'comment_status' => 'closed',
-				'ping_status' => 'closed',
-				'post_status' => 'publish',
-			));
+						'post_type' => 'primer_receipt',
+						'post_title' => 'Receipt for order #' . $id_of_order,
+						'comment_status' => 'closed',
+						'ping_status' => 'closed',
+						'post_status' => 'draft',
+					));
 					wp_set_object_terms($post_id, $invoice_term, $insert_taxonomy, false);
 
 					if ($post_id) {
 
-					$post_issued = 'issued';
-					if (empty($user_data)) {
-						$post_issued = 'not_issued';
-						$receipt_log_value .= __('Order Client name is required!', 'primer');
-					}
+						$invoice_data['invoice'][0]['invoiceHeader']['series'] = 'A';
+						$invoice_data['invoice'][0]['invoiceHeader']['aa'] = $post_id;
+						$invoice_data['invoice'][0]['invoiceHeader']['invoiceType'] = $invoiceType;
+						$invoice_data['invoice'][0]['invoiceHeader']['currency'] = $currency;
+						$invoice_data['invoice'][0]['invoiceHeader']['issueDate'] = get_the_date('Y-m-d', $post_id);
 
-					update_post_meta($post_id, 'receipt_status', $post_issued);
-					update_post_meta($post_id, 'order_id_to_receipt', $id_of_order);
-					update_post_meta($id_of_order, 'receipt_status', $post_issued);
-					add_post_meta($post_id, 'receipt_client', $user_data);
-					add_post_meta($post_id, 'receipt_client_id', $user_id);
-					add_post_meta($post_id, 'receipt_price', $order_total_price . ' ' .$currency_symbol);
+					$sum = 0;
+					$item_count = 0;
+
+					$tax_classes   = WC_Tax::get_tax_classes(); // Retrieve all tax classes.
+					if ( ! in_array( '', $tax_classes ) ) { // Make sure "Standard rate" (empty class name) is present.
+						array_unshift( $tax_classes, '' );
+					}
+					$inside_tax_rate = '';
+
 					foreach ( $order->get_items() as $item_id => $item_data ) {
 						$product_name = $item_data->get_name();
 						add_post_meta($post_id, 'receipt_product', $product_name);
-					}
+						$quantity = $item_data->get_quantity();
+						$sum += $quantity;
 
-					$response_data = '<div class="notice notice-success"><p>Orders converted</p></div>';
+						$product_id = $item_data->get_product_id();
+						$product_instance = wc_get_product($product_id);
 
-					$post_url = get_the_permalink($post_id);
-					$homepage = file_get_contents($post_url);
-					// instantiate and use the dompdf class
-					$dompdf = new Dompdf();
-					$options= $dompdf->getOptions();
-					$options->setIsHtml5ParserEnabled(true);
-					$dompdf->setOptions($options);
+						$subtotal_order_payment = $item_data->get_subtotal();
 
-					$dompdf->loadHtml($homepage);
+						$product_tax_class = $product_instance->get_tax_class();
 
-					// Render the HTML as PDF
-					$dompdf->render();
+						$taxes = WC_Tax::get_rates_for_tax_class( $product_tax_class );
 
-					$upload_dir = wp_upload_dir()['basedir'];
-
-					if (!file_exists($upload_dir . '/email-invoices')) {
-						mkdir($upload_dir . '/email-invoices');
-					}
-					$post_name = get_the_title($post_id);
-					$post_name = str_replace(' ', '_', $post_name);
-					$post_name = str_replace('#', '', $post_name);
-					$post_name = strtolower($post_name);
-
-					$output = $dompdf->output();
-					file_put_contents($upload_dir . '/email-invoices/'.$post_name.'.pdf', $output);
-
-					$attachments = $upload_dir . '/email-invoices/'.$post_name.'.pdf';
-
-					$user_email = $user ? $user_order_email : $user->user_email;
-
-					$primer_smtp_options = get_option('primer_emails');
-
-					$headers = 'From: ' . $primer_smtp_options['from_email_field'] ? $primer_smtp_options['from_email_field'] : 'Primer '. get_bloginfo('admin_email');
-					if (!empty($primer_smtp_options['email_subject'])) {
-						$primer_smtp_subject = $primer_smtp_options['email_subject'];
-					} else {
-						$primer_smtp_subject = __('Test email subject', 'primer');
-					}
-
-					if (!empty($primer_smtp_options['quote_available_content'])) {
-						$primer_smtp_message = $primer_smtp_options['quote_available_content'];
-					} else {
-						$primer_smtp_message = __('Test email message', 'primer');
-					}
-
-					$primer_automatically_send_file = $primer_smtp_options['automatically_send_on_conversation'];
-
-					if (empty($primer_automatically_send_file)) {
-						$primer_automatically_send_file = 'yes';
-					}
-
-					$receipt_log_id = wp_insert_post(array(
-							'post_type' => 'primer_receipt_log',
-							'post_title' => 'Receipt report for #' . $id_of_order,
-							'comment_status' => 'closed',
-							'ping_status' => 'closed',
-							'post_status' => 'publish',
-						));
-						if ($receipt_log_id) {
-
-							$invoice_date = get_the_date('F j, Y', $post_id);
-
-
-							update_post_meta($receipt_log_id, 'receipt_log_order_id', $id_of_order);
-							update_post_meta($receipt_log_id, 'receipt_log_order_date', $order_paid_date);
-							update_post_meta($receipt_log_id, 'receipt_log_invoice_id', $post_id);
-							update_post_meta($receipt_log_id, 'receipt_log_invoice_date', $invoice_date);
-							update_post_meta($receipt_log_id, 'receipt_log_client', $user_data);
-							$get_issue_status = get_post_meta($post_id, 'receipt_status', true);
-							if(empty($get_issue_status)) {
-								$get_issue_status = 'issued';
+						$tax_arr = json_decode(json_encode($taxes), true);
+						foreach ( $tax_arr as $tax ) {
+							if ($product_tax_class == $tax['tax_rate_class']) {
+								$inside_tax_rate = $tax['tax_rate'];
 							}
+						}
+						$inside_tax_rate = round($inside_tax_rate);
 
-							update_post_meta($receipt_log_id, 'receipt_log_status', $get_issue_status);
-							update_post_meta($receipt_log_id, 'receipt_log_error', $receipt_log_value);
+						$vatCategory = '';
+
+						switch ($inside_tax_rate) {
+							case "24":
+								$vatCategory = 1;
+							break;
+							case "17":
+								$vatCategory = 4;
+							break;
+							case "13":
+								$vatCategory = 2;
+							break;
+							case "9":
+								$vatCategory = 5;
+							break;
+							case "6":
+								$vatCategory = 3;
+							break;
+							case "4":
+								$vatCategory = 6;
+							break;
+							case "0":
+								$vatCategory = 7;
+							break;
 						}
 
-						$email_logs = '';
+						$subtotal_item_tax = $item_data->get_subtotal_tax();
 
-					if (!empty($primer_automatically_send_file) && $primer_automatically_send_file === 'yes') {
-
-						$mailResult = false;
-						$primer_smtp = PrimerSMTP::get_instance();
-
-
-						$mailResultSMTP = $primer_smtp->primer_mail_sender($user_order_email, $primer_smtp_subject, $primer_smtp_message, $attachments);
-
-						if (! $primer_smtp->credentials_configured()) {
-							$email_logs .= __('Configure your SMTP credentials', 'primer') ."\n";
-						}
-
-						if (!empty($mailResultSMTP['error']) && ! $primer_smtp->credentials_configured()) {
-							$response_data = '<div class="notice notice-error"><p>'.$GLOBALS['phpmailer']->ErrorInfo.'</p></div>';
-							update_post_meta($receipt_log_id, 'receipt_log_email', 'not_sent');
-							$email_logs .= $GLOBALS['phpmailer']->ErrorInfo ."\n";
-							update_post_meta($receipt_log_id, 'receipt_log_email_error', $email_logs);
-							update_post_meta($receipt_log_id, 'receipt_log_total_status', 'only_errors');
-						} else {
-							update_post_meta($receipt_log_id, 'receipt_log_email', 'sent');
-							update_post_meta($receipt_log_id, 'receipt_log_total_status', 'only_issued');
-						}
-
-						/*$mailResult = wp_mail( $user_order_email, $primer_smtp_subject, $primer_smtp_message, $headers, $attachments );
-
-						if (!$mailResult) {
-							$response_data = '<div class="notice notice-error"><p>'.$GLOBALS['phpmailer']->ErrorInfo.'</p></div>';
-							update_post_meta($receipt_log_id, 'receipt_log_email', 'not_sent');
-							update_post_meta($receipt_log_id, 'receipt_log_email_error', $GLOBALS['phpmailer']->ErrorInfo);
-							update_post_meta($receipt_log_id, 'receipt_log_total_status', 'only_errors');
-						} else {
-							update_post_meta($receipt_log_id, 'receipt_log_email', 'sent');
-							update_post_meta($receipt_log_id, 'receipt_log_total_status', 'only_issued');
-						}*/
-
-
-						update_post_meta($post_id, 'exist_error_log', 'exist_log');
-					} else {
-						if (! $primer_smtp->credentials_configured()) {
-							$email_logs .= __('Configure your SMTP credentials', 'primer') ."\n";
-						}
-						$email_logs .= __('Send email automatically on order conversion disabled', 'primer') ."\n";
-						update_post_meta($receipt_log_id, 'receipt_log_email', 'not_sent');
-						update_post_meta($receipt_log_id, 'receipt_log_email_error', $email_logs);
-						update_post_meta($receipt_log_id, 'receipt_log_total_status', 'only_issued');
+						$invoice_data['invoice'][0]['invoiceDetails'][$item_count]['lineNumber'] = $item_count + 1;
+						$invoice_data['invoice'][0]['invoiceDetails'][$item_count]['netValue'] = $subtotal_order_payment;
+						$invoice_data['invoice'][0]['invoiceDetails'][$item_count]['vatCategory'] = (int)$vatCategory;
+						$invoice_data['invoice'][0]['invoiceDetails'][$item_count]['vatAmount'] = "$subtotal_item_tax";
+						$invoice_data['invoice'][0]['invoiceDetails'][$item_count]['quantity'] = $quantity;
+						$invoice_data['invoice'][0]['invoiceDetails'][$item_count]['measurementUnit'] = 1;
+						$item_count++;
 					}
+
+					$subtotal = $order->get_subtotal();
+					$total_tax = $order->get_total_tax();
+					$total_fees = $order->get_fees();
+					$total = $order->get_total();
+
+					$invoice_data['invoice'][0]['paymentMethods']['paymentMethodDetails'][0]['type'] = 3;
+					$invoice_data['invoice'][0]['paymentMethods']['paymentMethodDetails'][0]['amount'] = 0;
+
+					$invoice_data['invoice'][0]['invoiceSummary']['totalNetValue'] = "$subtotal";
+					$invoice_data['invoice'][0]['invoiceSummary']['totalVatAmount'] = $total_tax;
+					$invoice_data['invoice'][0]['invoiceSummary']['totalWithheldAmount'] = '0';
+					$invoice_data['invoice'][0]['invoiceSummary']['totalFeesAmount'] = '0';
+					$invoice_data['invoice'][0]['invoiceSummary']['totalStampDutyAmount'] = '0';
+					$invoice_data['invoice'][0]['invoiceSummary']['totalDeductionsAmount'] = '0';
+					$invoice_data['invoice'][0]['invoiceSummary']['totalOtherTaxesAmount'] = '0';
+					$invoice_data['invoice'][0]['invoiceSummary']['totalGrossValue'] = $total;
+
+					$post_ids[] = $post_id;
 				}
 
 				} else {
@@ -711,8 +700,211 @@ function convert_select_orders() {
 				} else {
 					$response_data = '<div class="notice notice-error"><p>'.__('Only euro is accepted.', 'primer').'</p></div>';
 				}
-
 		}
+
+		$curl_args[CURLOPT_POSTFIELDS] = json_encode($invoice_data);
+
+		curl_setopt_array($curl, $curl_args);
+
+		$response = curl_exec($curl);
+		curl_close($curl);
+
+		$response_to_array = json_decode($response);
+		$response_from_array = $response_to_array->response;
+		if (!empty($response_to_array)) {
+			if (!empty($response_from_array)) {
+				if ($response_from_array[0]->statusCode == 'Success') {
+					if (!empty($post_ids)) {
+						foreach ($post_ids as $post_id) {
+						    $update_post_data = array(
+								'ID' => $post_id,
+								'post_status' => 'publish',
+							);
+							wp_update_post( wp_slash($update_post_data) );
+
+							$invoice_uid = $response_from_array[0]->invoiceUid;
+
+							if (!empty($invoice_uid)) {
+								update_post_meta($post_id, 'response_invoice_uid', $invoice_uid);
+							}
+
+							$invoice_mark = $response_from_array[0]->invoiceMark;
+							if (!empty($invoice_mark)) {
+								update_post_meta($post_id, 'response_invoice_mark', $invoice_mark);
+							}
+
+							$invoice_authcode = $response_from_array[0]->authenticationCode;
+							if (!empty($invoice_authcode)) {
+								update_post_meta($post_id, 'response_invoice_authcode', $invoice_authcode);
+							}
+
+							$post_url = get_the_permalink($post_id);
+
+							$homepage = file_get_contents($post_url);
+							// instantiate and use the dompdf class
+							$dompdf = new Dompdf();
+							$options= $dompdf->getOptions();
+							$options->setIsHtml5ParserEnabled(true);
+							$dompdf->setOptions($options);
+
+							$dompdf->loadHtml($homepage);
+
+							// Render the HTML as PDF
+							$dompdf->render();
+
+							$upload_dir = wp_upload_dir()['basedir'];
+
+							if (!file_exists($upload_dir . '/email-invoices')) {
+								mkdir($upload_dir . '/email-invoices');
+							}
+							$post_name = get_the_title($post_id);
+							$post_name = str_replace(' ', '_', $post_name);
+							$post_name = str_replace('#', '', $post_name);
+							$post_name = strtolower($post_name);
+
+							$output = $dompdf->output();
+							file_put_contents($upload_dir . '/email-invoices/'.$post_name.'.pdf', $output);
+
+							$attachments = $upload_dir . '/email-invoices/'.$post_name.'.pdf';
+
+							foreach ( $orders as $order_id ) {
+								$order = wc_get_order( $order_id );
+								$id_of_order = $order->get_id();
+								$user_id   = $order->get_user_id();
+								$user      = $order->get_user();
+
+								$order_country = $order->get_billing_country();
+								$order_create_date = date( 'F j, Y', $order->get_date_created()->getOffsetTimestamp());
+								$order_paid_date = null;
+								$order_paid_hour = null;
+								if (!empty($order->get_date_paid())) {
+									$order_paid_date = date( 'F j, Y', $order->get_date_paid()->getTimestamp());
+									$order_paid_hour = date( 'H:i:s', $order->get_date_paid()->getTimestamp());
+								} else {
+									$order_paid_date = date( 'F j, Y', $order->get_date_created()->getTimestamp());
+									$order_paid_hour = date( 'H:i:s', $order->get_date_created()->getTimestamp());
+								}
+
+								$currency      = $order->get_currency();
+								$currency_symbol = get_woocommerce_currency_symbol( $currency );
+
+								$order_total_price = $order->get_total();
+
+								$user_first_name = $order->get_billing_first_name();
+								$user_last_name = $order->get_billing_last_name();
+
+								$user_full_name = $user_first_name . ' ' . $user_last_name;
+								$user_data = $user_full_name ? $user_full_name : '';
+
+								$user_order_email = $order->get_billing_email();
+
+								$user_email = $user ? $user_order_email : $user->user_email;
+
+								$post_issued = 'issued';
+								if (empty($user_data)) {
+									$post_issued = 'not_issued';
+									$receipt_log_value .= __('Order Client name is required!', 'primer');
+								}
+
+								update_post_meta($post_id, 'receipt_status', $post_issued);
+								update_post_meta($post_id, 'order_id_to_receipt', $id_of_order);
+								update_post_meta($id_of_order, 'receipt_status', $post_issued);
+								add_post_meta($post_id, 'receipt_client', $user_data);
+								add_post_meta($post_id, 'receipt_client_id', $user_id);
+								add_post_meta($post_id, 'receipt_price', $order_total_price . ' ' .$currency_symbol);
+
+								$primer_smtp_options = get_option('primer_emails');
+
+								$headers = 'From: ' . $primer_smtp_options['from_email_field'] ? $primer_smtp_options['from_email_field'] : 'Primer '. get_bloginfo('admin_email');
+								if (!empty($primer_smtp_options['email_subject'])) {
+									$primer_smtp_subject = $primer_smtp_options['email_subject'];
+								} else {
+									$primer_smtp_subject = __('Test email subject', 'primer');
+								}
+
+								if (!empty($primer_smtp_options['quote_available_content'])) {
+									$primer_smtp_message = $primer_smtp_options['quote_available_content'];
+								} else {
+									$primer_smtp_message = __('Test email message', 'primer');
+								}
+
+								$primer_automatically_send_file = $primer_smtp_options['automatically_send_on_conversation'];
+
+								if (empty($primer_automatically_send_file)) {
+									$primer_automatically_send_file = 'yes';
+								}
+
+								$receipt_log_id = wp_insert_post(array(
+									'post_type' => 'primer_receipt_log',
+									'post_title' => 'Receipt report for #' . $id_of_order,
+									'comment_status' => 'closed',
+									'ping_status' => 'closed',
+									'post_status' => 'publish',
+								));
+								if ($receipt_log_id) {
+
+									$invoice_date = get_the_date('F j, Y', $post_id);
+
+
+									update_post_meta($receipt_log_id, 'receipt_log_order_id', $id_of_order);
+									update_post_meta($receipt_log_id, 'receipt_log_order_date', $order_paid_date);
+									update_post_meta($receipt_log_id, 'receipt_log_invoice_id', $post_id);
+									update_post_meta($receipt_log_id, 'receipt_log_invoice_date', $invoice_date);
+									update_post_meta($receipt_log_id, 'receipt_log_client', $user_data);
+									$get_issue_status = get_post_meta($post_id, 'receipt_status', true);
+									if(empty($get_issue_status)) {
+										$get_issue_status = 'issued';
+									}
+
+									update_post_meta($receipt_log_id, 'receipt_log_status', $get_issue_status);
+									update_post_meta($receipt_log_id, 'receipt_log_error', $receipt_log_value);
+								}
+
+								$email_logs = '';
+
+								if (!empty($primer_automatically_send_file) && $primer_automatically_send_file === 'yes') {
+
+									$mailResult = false;
+									$primer_smtp = PrimerSMTP::get_instance();
+
+									$mailResultSMTP = $primer_smtp->primer_mail_sender($user_order_email, $primer_smtp_subject, $primer_smtp_message, $attachments);
+
+									if (! $primer_smtp->credentials_configured()) {
+										$email_logs .= __('Configure your SMTP credentials', 'primer') ."\n";
+									}
+
+									if (!empty($mailResultSMTP['error']) && ! $primer_smtp->credentials_configured()) {
+										$response_data = '<div class="notice notice-error"><p>'.$GLOBALS['phpmailer']->ErrorInfo.'</p></div>';
+										update_post_meta($receipt_log_id, 'receipt_log_email', 'not_sent');
+										$email_logs .= $GLOBALS['phpmailer']->ErrorInfo ."\n";
+										update_post_meta($receipt_log_id, 'receipt_log_email_error', $email_logs);
+										update_post_meta($receipt_log_id, 'receipt_log_total_status', 'only_errors');
+									} else {
+										update_post_meta($receipt_log_id, 'receipt_log_email', 'sent');
+										update_post_meta($receipt_log_id, 'receipt_log_total_status', 'only_issued');
+									}
+
+									update_post_meta($post_id, 'exist_error_log', 'exist_log');
+								} else {
+									if (! $primer_smtp->credentials_configured()) {
+										$email_logs .= __('Configure your SMTP credentials', 'primer') ."\n";
+									}
+										$email_logs .= __('Send email automatically on order conversion disabled', 'primer') ."\n";
+										update_post_meta($receipt_log_id, 'receipt_log_email', 'not_sent');
+										update_post_meta($receipt_log_id, 'receipt_log_email_error', $email_logs);
+										update_post_meta($receipt_log_id, 'receipt_log_total_status', 'only_issued');
+									}
+							}
+
+						}
+					}
+
+					$response_data = '<div class="notice notice-success"><p>Orders converted</p></div>';
+
+				}
+			}
+		}
+
 	}
 
 	echo $response_data;
@@ -782,7 +974,7 @@ function fetch_primer_script() {
                                         $('table.table-view-list.orders').css({'opacity': '1'});
 									}, 1500);
                 	        setTimeout(function (){
-                	            document.location.reload();
+                	            // document.location.reload();
                 	        }, 2000);
                 	    }
                 	}

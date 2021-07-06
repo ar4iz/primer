@@ -630,9 +630,9 @@ do_action( 'primer_before_receipt_display' ); ?>
 
 			<p> <span class="sender_sign">https://primer.gr/searchinvoice <br>Provided by Primer Software P.C.</span></p><br><br>
 			<p class="mydata_sign">
-				<span>uid: </span> <span class="uid_sign">{INVOICEUID}</span>
-				<span>mark:</span> <span class="mark_sign">{INVOICEMARK}</span>
-				<span>authcode:</span> <span class="authcode_sign">{AUTHCODE}</span>
+				<span>uid: </span> <span class="uid_sign"><?php primer_invoice_uid(); ?></span>
+				<span>mark:</span> <span class="mark_sign"><?php primer_invoice_mark(); ?></span>
+				<span>authcode:</span> <span class="authcode_sign"><?php primer_invoice_authcode(); ?></span>
 			</p>
 		</div>
 

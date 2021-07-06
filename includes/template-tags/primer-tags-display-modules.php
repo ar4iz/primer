@@ -736,3 +736,32 @@ function primer_display_right_customer_info() {
 	echo $right_customer_info;
 }
 
+function primer_invoice_uid() {
+	$invoice_uid = '';
+
+	$receipt_id = get_the_ID();
+	$invoice_uid = get_post_meta($receipt_id, 'response_invoice_uid', true);
+
+
+	echo $invoice_uid;
+}
+
+function primer_invoice_mark() {
+	$invoice_mark = '';
+
+	$receipt_id = get_the_ID();
+	$invoice_mark = get_post_meta($receipt_id, 'response_invoice_mark', true);
+
+
+	echo $invoice_mark;
+}
+
+function primer_invoice_authcode() {
+	$invoice_authcode = '';
+
+	$receipt_id = get_the_ID();
+	$invoice_authcode = get_post_meta($receipt_id, 'response_invoice_authcode', true);
+
+
+	echo $invoice_authcode;
+}

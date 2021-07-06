@@ -195,6 +195,22 @@
     padding-left: 0;
 }
 
+#primer_mydata .cmb2-id-company-logo .cmb-td {
+    display: flex;
+    flex-direction: column;
+}
+
+#primer_mydata .cmb2-id-company-logo .cmb-td h3 {
+    order: 0;
+}
+#primer_mydata .cmb2-id-company-logo .cmb-td .company_img {
+    order: 1;
+}
+
+#primer_mydata .cmb2-id-company-logo .cmb-td .cmb2-metabox-description {
+    order: 2;
+}
+
 .send_receipts_wrap {
     margin-right: 30px;
 }

@@ -55,6 +55,8 @@ class Primer_Options {
 
 		add_action('wp_ajax_primer_smtp_settings', array(&$this, 'primer_smtp_settings'));
 
+		add_action('wp_ajax_primer_user_picture_upload', array(&$this, 'primer_user_picture_upload'));
+
 		$this->menu_title = __( 'Primer Receipts', 'primer' );
 	}
 
@@ -235,6 +237,30 @@ class Primer_Options {
 			)
 		) );
 
+		$mydata_options = get_option('primer_mydata');
+		$company_logo_id = '';
+		$company_logo_src = '';
+		$disable_upload = '';
+		if (!empty($mydata_options)) {
+			if (!empty($mydata_options['upload_img_id'])) {
+				$company_logo_id = $mydata_options['upload_img_id'];
+			}
+
+			if (!empty($company_logo_id)) {
+				$company_logo_src .= '<img src="'.wp_get_attachment_image_url($company_logo_id, array(350, 100)).'" alt="Company logo">';
+			} else {
+				$company_logo_src .= '';
+			}
+		}
+
+		if (!empty($mydata_options['count_logo_change'])) {
+			if ($mydata_options['count_logo_change'] >= 3) {
+				$disable_upload = 'disabled hidden';
+			} else {
+				$disable_upload = '';
+			}
+		}
+
 		$this->option_metabox[] = apply_filters( 'primer_mydata_option_fields', array(
 			'id'			=> $prefix . 'mydata',
 			'title'			=> __( 'MyData Settings', 'primer' ),
@@ -245,7 +271,7 @@ class Primer_Options {
 			'fields'		=> array(
 
 				array(
-					'name'		=> __( 'Invoice Settings', 'primer' ),
+					'name'		=> __( 'MyData Invoices', 'primer' ),
 					'desc'		=> '',
 					'default'	=> '',
 					'id'		=> 'title_invoice_settings',
@@ -253,92 +279,89 @@ class Primer_Options {
 				),
 
 				array(
-					'name'      => __( 'Invoice name', 'primer' ),
-					'desc'      => __( '', 'primer' ),
-					'default'   => 'Έσοδα από Πώληση Εμπορευμάτων (Income from selling products)',
-					'id'        => 'invoice_name_gr_receipt',
-					'type'      => 'text',
-				),
-
-				array(
-					'name'      => __( 'Invoice Type', 'primer' ),
+					'name'      => __( 'MyData Package:', 'primer' ),
 					'desc'      => __( '', 'primer' ),
 					'default'   => '',
-					'id'        => 'invoice_type_gr_receipt',
-					'type'      => 'select',
-					'options'	=> array('1.1' => __( 'Aπόδειξη Λιανικής πώλησης (Greek receipt)', 'primer' )),
+					'id'        => 'mydata_package',
+					'type'      => 'text_small',
 				),
 
 				array(
-					'name'      => __( 'Invoice name', 'primer' ),
-					'desc'      => __( '', 'primer' ),
-					'default'   => 'Έσοδα από Πώληση Εμπορευμάτων (Income from selling products)',
-					'id'        => 'invoice_name_gr_invoice',
-					'type'      => 'text',
-				),
-
-				array(
-					'name'      => __( 'Invoice Type', 'primer' ),
+					'name'      => __( 'Remaining MyData Invoices for this month:', 'primer' ),
 					'desc'      => __( '', 'primer' ),
 					'default'   => '',
-					'id'        => 'invoice_type_gr_invoice',
-					'type'      => 'select',
-					'options'	=> array('1.1' => __( 'Τιμολόγιο Πώλησης (Greek invoice)', 'primer' )),
+					'id'        => 'remaining_mydata_invoices',
+					'type'      => 'text_small',
+					'after'		=> '<a href="#" class="button">'.__('Get remaining', 'primer').'</a>'
 				),
 
 				array(
-					'name'      => __( 'Invoice name', 'primer' ),
-					'desc'      => __( '', 'primer' ),
-					'default'   => 'Έσοδα από Παροχή Υπηρεσιών (Income from selling services)',
-					'id'        => 'invoice_name_gr_receipt_services',
-					'type'      => 'text',
-				),
-
-				array(
-					'name'      => __( 'Invoice Type', 'primer' ),
+					'name'      => __( 'Contract ends on:', 'primer' ),
 					'desc'      => __( '', 'primer' ),
 					'default'   => '',
-					'id'        => 'invoice_type_gr_receipt_services',
-					'type'      => 'select',
-					'options'	=> array('1.3' => __( 'Απόδειξη Παροχής Υπηρεσιών (Greek receipt for services)', 'primer' )),
+					'id'        => 'mydata_contract_ends_on',
+					'type'      => 'text_small',
 				),
 
 				array(
-					'name'      => __( 'Invoice name', 'primer' ),
-					'desc'      => __( '', 'primer' ),
-					'default'   => 'Έσοδα από Παροχή Υπηρεσιών (Income from selling services)',
-					'id'        => 'invoice_name_gr_invoice_services',
-					'type'      => 'text',
+					'name' 		=> __( 'MyData API:', 'primer' ),
+					'desc'		=> '',
+					'id'		=> 'mydata_api',
+					'type'		=> 'select',
+					'options'	=> array(
+						'test_api' => __( 'Test API', 'primer' ),
+						'live_api' => __( 'Live API', 'primer' ),
+					),
 				),
 
 				array(
-					'name'      => __( 'Invoice Type', 'primer' ),
+					'name'      => __( 'Resend last HTML document', 'primer' ),
 					'desc'      => __( '', 'primer' ),
 					'default'   => '',
-					'id'        => 'invoice_type_gr_invoice_services',
-					'type'      => 'select',
-					'options'	=> array('1.3' => __( 'Τιμολόγιο Παροχής (Greek invoice for services)', 'primer' )),
+					'id'        => 'resend_last_html_doc',
+					'type'      => 'title',
+					'after_field'		=> '<a href="#" class="button">'.__('Resend', 'primer').'</a>',
 				),
-
 
 				array(
 					'name'		=> __('Add Company Logo', 'primer'),
 					'desc'		=> __('Jpg,Png files only. File must be 256x256px and up to 75 kb. Up to 3 logo changes (after pressing save) are supported.', 'primer'),
-					'id'		=> 'logo',
-					'type'		=> 'file',
-					'options' => array(
-						'url' => false, // Hide the text input for the url
-					),
-					'text'    => array(
-						'add_upload_file_text' => 'Upload File' // Change upload button text. Default: "Add or Upload File"
-					),
-					'allow'		=> array('url', 'attachment'),
-					'query_args' => array(
-						'type' => array(
-							'image/jpeg',
-							'image/png',
-						)
-					),
+					'id'		=> 'company_logo',
+					'type'		=> 'title',
+					'after_field' => '
+						<div class="company_img">
+							<div id="profile_photo">
+								<div class="thumb">
+									<div class="avatar-wrapper">'
+										.$company_logo_src.
+									'</div>
+								</div>
+							</div>
+							<div id="upload_errors"></div>
+							<div class="profile-img-controls">
+								<div id="plupload-container"></div>
+							</div>
+							<div id="profile_upload_container" class="get__photo">
+								<a id="select_user_profile_photo" class="upload-button button '.$disable_upload.'" href="javascript:;">'.__('Upload File', 'primer').'</a>
+							</div>
+						</div>
+					',
+				),
+
+				array(
+					'name'		=> __('Count of upload logo', 'primer'),
+					'desc'		=> '',
+					'id'		=> 'count_logo_change',
+					'type'		=> 'hidden',
+					'default'	=> '0',
+				),
+
+				array(
+					'name'		=> __('Image API ID', 'primer'),
+					'desc'		=> '',
+					'id'		=> 'image_api_id',
+					'type'		=> 'hidden',
+					'default'	=> '',
 				),
 
 				array(
@@ -362,91 +385,6 @@ class Primer_Options {
 						<a href="'.plugins_url('/primer/public/partials/invoicetemplate_defaultA4.php').'" target="_blank" class="button preview">'.__('Preview template', 'primer').'</a>
 					',
 				),
-
-				/*array(
-					'name'		=> __( 'VAT Settings:', 'primer' ),
-					'desc'		=> '',
-					'default'	=> '',
-					'id'		=> 'title_vat_settings',
-					'type'		=> 'title',
-				),
-
-				array(
-					'name'		=> __( 'VAT %', 'primer' ),
-					'desc'		=> '',
-					'default'	=> __( 'Woocommerce VAT category', 'primer' ),
-					'type'		=> 'text',
-					'id'		=> 'vat_percents',
-					'attributes' => array(
-						'name'	=> '',
-						'readonly' => 'readonly',
-						'class' => 'regular-text input_title'
-					)
-
-				),
-
-				array(
-					'name'		=> __( '24%', 'primer' ),
-					'desc'		=> '',
-					'default'	=> '',
-					'type'		=> 'select',
-					'id'		=> 'standard_vat_rates',
-					'options'	=> array('1' => '1'),
-				),
-
-				array(
-					'name'		=> __( '17%', 'primer' ),
-					'desc'		=> '',
-					'default'	=> '',
-					'type'		=> 'select',
-					'id'		=> 'seventeen_vat_rates',
-					'options'	=> array('4' => '4'),
-				),
-
-				array(
-					'name'		=> __( '13%', 'primer' ),
-					'desc'		=> '',
-					'default'	=> '',
-					'type'		=> 'select',
-					'id'		=> 'thirteen_vat_rates',
-					'options'	=> array('2' => '2')
-				),
-
-				array(
-					'name'		=> __( '9%', 'primer' ),
-					'desc'		=> '',
-					'default'	=> '',
-					'type'		=> 'select',
-					'id'		=> 'nine_vat_rates',
-					'options'	=> array('5' => '5')
-				),
-
-				array(
-					'name'		=> __( '6%', 'primer' ),
-					'desc'		=> '',
-					'default'	=> '',
-					'type'		=> 'select',
-					'id'		=> 'six_vat_rates',
-					'options'	=> array('3' => '3')
-				),
-
-				array(
-					'name'		=> __( '4%', 'primer' ),
-					'desc'		=> '',
-					'default'	=> '',
-					'type'		=> 'select',
-					'id'		=> 'four_vat_rates',
-					'options'	=> array('6' => '6')
-				),
-
-				array(
-					'name'		=> __( '0%', 'primer' ),
-					'desc'		=> '',
-					'default'	=> '',
-					'type'		=> 'select',
-					'id'		=> 'zero_vat_rates',
-					'options'	=> array('7' => '7')
-				),*/
 			)
 		) );
 
@@ -1371,6 +1309,117 @@ class Primer_Options {
 
 //		}
 		wp_die();
+	}
+
+	public function primer_user_picture_upload() {
+
+		$mydata_options = get_option('primer_mydata');
+
+		if (!empty($mydata_options['count_logo_change'])) {
+			$count_logo_change = $mydata_options['count_logo_change'];
+		} else {
+			$count_logo_change = '0';
+		}
+
+		$store_url = 'https://wp-mydataapi.ddns.net/v2/invoice/photo';
+		$auth = base64_encode( 'user' . ':' . 'qwerty' );
+
+		$curl_args = array(
+			CURLOPT_URL => $store_url,
+			CURLOPT_RETURNTRANSFER => true,
+			CURLOPT_ENCODING => '',
+			CURLOPT_MAXREDIRS => 10,
+			CURLOPT_TIMEOUT => 0,
+			CURLOPT_FOLLOWLOCATION => true,
+			CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+			CURLOPT_CUSTOMREQUEST => 'POST',
+			CURLOPT_HTTPHEADER => array(
+				"Authorization: Basic $auth",
+				'Content-Type: application/json'
+			)
+		);
+
+		$curl = curl_init();
+
+
+		// Verify if Nonce is valid
+		$verify_nonce = $_REQUEST['verify_nonce'];
+		if ( !wp_verify_nonce($verify_nonce, 'upload_nonce') ) {
+			echo json_encode(array('success' => false, 'reason' => 'Invalid request'));
+			die();
+		}
+
+		$user_image = $_FILES['file_data_name'];
+		$wp_handle_upload = wp_handle_upload($user_image, array('test_form' => false));
+
+		if (isset($wp_handle_upload['file'])) {
+			$file_name = basename($user_image['name']);
+			$file_type = wp_check_filetype($wp_handle_upload['file']);
+
+			$uploaded_image_details = array(
+				'guid'           => $wp_handle_upload['url'],
+				'post_mime_type' => $file_type['type'],
+				'post_title'     => preg_replace('/\.[^.]+$/', '', basename($file_name)),
+				'post_content'   => '',
+				'post_status'    => 'inherit'
+			);
+
+			$attach_url = $wp_handle_upload['url'];
+
+			$type = pathinfo($attach_url, PATHINFO_EXTENSION);
+			$data = file_get_contents($attach_url);
+			$base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+
+			$curl_args['CURLOPT_POSTFIELDS'] = $base64;
+
+			curl_setopt_array($curl, $curl_args);
+
+			$response = curl_exec($curl);
+			curl_close($curl);
+
+			$response_image = array();
+
+			if (!empty($response)) {
+				$mydata_options['image_api_id'] = $response;
+				$response_args = explode(':', $response);
+				if (count($response_args) > 1) {
+					$response_key = $response_args[0];
+					$response_value = $response_args[1];
+					$response_key = str_replace('"', '', $response_key);
+					$response_value = str_replace('"', '', $response_value);
+					$response_image[$response_key] = $response_value;
+				}
+			}
+
+			if (array_key_exists('photoId', $response_image)) {
+				if (!empty($response_image['photoId'])) {
+					$mydata_options['count_logo_change'] = $count_logo_change + 1;
+					$profile_attach_id = wp_insert_attachment($uploaded_image_details, $wp_handle_upload['file']);
+
+					$profile_attach_data = wp_generate_attachment_metadata($profile_attach_id, $wp_handle_upload['file']);
+					wp_update_attachment_metadata($profile_attach_id, $profile_attach_data);
+
+					$mydata_options['upload_img_id'] = $profile_attach_id;
+
+					// Get uploaded image url
+//			$photo_url = ogedge_uploaded_image_url( $profile_attach_data );
+					$thumbnail_url = wp_get_attachment_image_src($profile_attach_id, array(256,256));
+
+					update_option('primer_mydata', $mydata_options);
+
+					echo json_encode(array(
+						'success' => true,
+						'url' => $thumbnail_url[0],
+						'attachment_id' => $profile_attach_id
+					));
+					die;
+				}
+			}
+
+		} else {
+			echo json_encode(array('success' => false, 'reason' => 'Profile Avatar upload failed'));
+			die;
+		}
 	}
 }
 

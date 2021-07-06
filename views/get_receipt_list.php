@@ -13,6 +13,7 @@ class PrimerReceiptList {
 		$receipt_args = array(
 			'posts_per_page' => -1,
 			'post_type' => 'primer_receipt',
+			'post_status' => 'publish',
 		);
 
 		$receipt_query = new WP_Query( $receipt_args );
@@ -76,6 +77,7 @@ class PrimerReceiptList {
 		$receipt_args = array(
 			'posts_per_page' => -1,
 			'post_type' => 'primer_receipt',
+			'post_status' => 'publish',
 		);
 
 		$receipt_query = new WP_Query( $receipt_args );
@@ -120,6 +122,7 @@ class PrimerReceiptList {
 		$receipt_args = array(
 			'posts_per_page' => -1,
 			'post_type' => 'primer_receipt',
+			'post_status' => 'publish',
 		);
 
 		$receipt_query = new WP_Query( $receipt_args );
@@ -146,6 +149,7 @@ class PrimerReceiptList {
 		$receipt_args = array(
 			'posts_per_page' => -1,
 			'post_type' => 'primer_receipt',
+			'post_status' => 'publish',
 		);
 
 		if (!empty($receipt_status)) {
